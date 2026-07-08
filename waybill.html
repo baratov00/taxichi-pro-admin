@@ -124,15 +124,12 @@
       }catch{return 40}
     };
     const buildShiftTimes=(openedAt,leadMinutes)=>{
-      const lead=Number.isFinite(Number(leadMinutes))?Number(leadMinutes):40;
-      const exit=new Date(openedAt.getTime()+Math.max(0,lead)*60000);
-      const total=clamp(Math.round(lead),30,38);
-      const beforeExit=clamp(Math.round(total/2),15,19);
-      const beforeShift=clamp(total-beforeExit,15,19);
-      const shiftStart=new Date(exit.getTime()-beforeExit*60000);
-      const medical=new Date(shiftStart.getTime()-beforeShift*60000);
-      const end=new Date(medical.getTime()+12*60*60*1000);
-      return {medical,tech:shiftStart,shiftStart,exit,end};
+      const exit=new Date(openedAt.getTime());
+      const medical=new Date(exit.getTime()-15*60000);
+      const tech=new Date(exit.getTime()-10*60000);
+      const shiftStart=new Date(exit.getTime()-10*60000);
+      const end=new Date(exit.getTime()+12*60*60*1000);
+      return {medical,tech,shiftStart,exit,end};
     };
 
     async function loadRemoteWaybill(id){

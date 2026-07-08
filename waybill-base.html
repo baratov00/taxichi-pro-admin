@@ -186,9 +186,10 @@
     const ss=readLocal('taxichiProStaff',[]);
     const m=ss.find(x=>x.id===o.medicId)||{lastName:'Соколова',firstName:'Елена',middleName:'Игоревна'};
     const k=ss.find(x=>x.id===o.mechanicId)||{lastName:'Петров',firstName:'Алексей',middleName:'Викторович'};
-    const dt=new Date(w.date);
-    const end=new Date(dt.getTime()+12*60*60*1000);
-    const exit=new Date(dt.getTime()+15*60*1000);
+    const exit=new Date(w.date);
+    const dt=new Date(exit.getTime()-10*60*1000);
+    const medTech=new Date(exit.getTime()-15*60*1000);
+    const end=new Date(exit.getTime()+12*60*60*1000);
     const returned=new Date(end.getTime()-15*60*1000);
     const txt=(id,v)=>document.getElementById(id).textContent=v||'—';
     const fio=x=>[x.lastName,x.firstName,x.middleName].filter(Boolean).join(' ');
@@ -225,8 +226,8 @@
     txt('medicUntil',dateOnly(m.signatureUntil||m.validUntil));
     txt('mechanicFrom',dateOnly(k.signatureFrom));
     txt('mechanicUntil',dateOnly(k.signatureUntil||k.validUntil));
-    ['medDate','mechDate'].forEach(id=>txt(id,date(dt)));
-    ['medTime','mechTime'].forEach(id=>txt(id,time(dt)));
+    ['medDate','mechDate'].forEach(id=>txt(id,date(medTech)));
+    ['medTime','mechTime'].forEach(id=>txt(id,time(medTech)));
     txt('shiftStartDate',date(dt));
     txt('shiftStartTime',time(dt));
     txt('parkingExitDate',date(exit));
