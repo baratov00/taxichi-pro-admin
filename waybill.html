@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Путевой лист Taxichi Pro</title>
+  <link rel="icon" href="taxichi-pro-logo.png">
+  <link rel="apple-touch-icon" href="taxichi-pro-logo.png">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#ddd;font-family:Arial,sans-serif;color:#111}
+    .actions{text-align:center;margin:14px}
+    .actions button{background:#ffd21c;border:0;border-radius:8px;padding:12px 20px;font-weight:800}
+    .sheet{width:210mm;height:297mm;margin:14px auto;background:#fff;overflow:hidden}
+    .page{width:595px;height:842px;position:relative;transform:scale(1.333333);transform-origin:0 0}
+    .draw{position:absolute;inset:0;transform:translate(36px,36px) scale(.94) translate(-36px,-36px);transform-origin:0 0}
+    svg{display:block;width:595px;height:900px}
+    .title{font:700 17px Arial,sans-serif}
+    .bold{font:700 10.4px Arial,sans-serif}
+    .text{font:400 10.5px Arial,sans-serif}
+    .small{font:400 8px Arial,sans-serif;fill:#333}
+    .infoValue{font:400 7.6px Arial,sans-serif;fill:#333}
+    .modeText{font:400 6.2px Arial,sans-serif;fill:#333}
+    .orderText{font:700 8px Arial,sans-serif;fill:#111}
+    .tinyBold{font:700 8.6px Arial,sans-serif}
+    .license{font:700 9.1px Arial,sans-serif}
+    .permit{font:700 8.2px Arial,sans-serif}
+    .block{font:700 9.4px Arial,sans-serif}
+    .large{font:700 17px Arial,sans-serif}
+    .odo{font:700 14px Arial,sans-serif}
+    .footer{font:700 9px Arial,sans-serif}
+    .stamp{font:400 6.4px Arial,sans-serif;fill:#2439c7}
+    .memoText{font:400 7.2px Arial,sans-serif;fill:#111}
+    .line{stroke:#111;stroke-width:1.2;fill:none}
+    .stampBox{stroke:#394ee8;stroke-width:1.5;fill:none}
+    .sig{stroke:#263a9b;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none;opacity:.96}
+    @page{size:A4;margin:0}
+    @media print{body{background:#fff}.actions{display:none}.sheet{margin:0}}
+  </style>
+</head>
+<body>
+  <div class="actions"><button onclick="print()">Сохранить или распечатать PDF</button></div>
+  <main class="sheet">
+    <div class="page"><div class="draw"><svg id="doc" viewBox="0 0 595 900" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+  </main>
+  <script>
+    const q=new URLSearchParams(location.search);
+    const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
+    const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
+    const ACTIVE_ADMIN_ID=q.get('admin')||sessionStorage.getItem('taxichiDispatcherSession')||'demo';
+    const ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
+    const storageKey=key=>ADMIN_DATA_KEYS.has(key)?`taxichiProAdmin:${ACTIVE_ADMIN_ID}:${key}`:key;
+    const readLocal=(key,fallback)=>{try{const raw=localStorage.getItem(storageKey(key)),legacy=ACTIVE_ADMIN_ID==='demo'?localStorage.getItem(key):null;return JSON.parse((raw??legacy)??'null')??fallback}catch{return fallback}};
+    const SVG_NS='http://www.w3.org/2000/svg';
+    const doc=document.getElementById('doc');
+    const seedW={id:q.get('id')||'1',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:648484,date:new Date().toISOString(),status:'Открыто'};
+    const defaultDriver={license:'МКК413031000885666',licenseFrom:'2018-01-16',licenseUntil:'2028-01-16',kisArt:'0000597358',phone:'+7 (993) 353-25-69',snils:'213-055-002 94',inn:'775135449026',osgopNumber:'XXX0598830871',taxiPermitNumber:'035678',taxiPermitUrl:'https://fgis-taxi.ru/'};
+    const defaultOrg={legalForm:'ИП',name:'Шиндина Анастасия Вадимовна',address:'г. Москва',ogrn:'321774600123456',inn:'772796701039',phone:'+7 915 395-53-83'};
+    const defaultMedic={lastName:'Соколова',firstName:'Елена',middleName:'Игоревна',certificate:'—'};
+    const defaultMechanic={lastName:'Петров',firstName:'Алексей',middleName:'Викторович',certificate:'—'};
+
+    const n=(name,attrs={},text='')=>{
+      const e=document.createElementNS(SVG_NS,name);
+      Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+      if(text!==undefined&&text!==null)e.textContent=text;
+      doc.append(e);
+      return e;
+    };
+    const txt=(value,x,y,cls='text',anchor='start')=>n('text',{x,y,class:cls,'text-anchor':anchor},value||'');
+    const txtFit=(value,x,y,w,cls='text')=>n('text',{x,y,class:cls,textLength:w,lengthAdjust:'spacingAndGlyphs'},value||'');
+    const txtFitCenter=(value,x,y,w,cls='text')=>n('text',{x,y,class:cls,'text-anchor':'middle',textLength:w,lengthAdjust:'spacingAndGlyphs'},value||'');
+    const multiline=(lines,x,y,cls='text',gap=12)=>{
+      lines.forEach((line,i)=>txt(line,x,y+i*gap,cls));
+    };
+    const rect=(x,y,w,h,cls='line',rx=0)=>n('rect',{x,y,width:w,height:h,class:cls,rx,ry:rx});
+    const line=(x1,y1,x2,y2)=>n('line',{x1,y1,x2,y2,class:'line'});
+    const center=(value,x,y,w,h,cls='text')=>txt(value,x+w/2,y+h/2+4,cls,'middle');
+    const lineText=(label,value,x,y,w,valueDx=115,cls='bold')=>{
+      txt(label,x,y,'text');
+      txt(value,x+valueDx,y,cls);
+      line(x,y+5,x+w,y+5);
+    };
+    const splitTwoLines=(value,max=42)=>{
+      const words=String(value||'').trim().split(/\s+/).filter(Boolean),lines=[''];
+      words.forEach(word=>{
+        const next=(lines[lines.length-1]+' '+word).trim();
+        if(next.length>max&&lines.length<2)lines.push(word);
+        else lines[lines.length-1]=next;
+      });
+      return lines.slice(0,2);
+    };
+    const addressText=(label,value,x,y,w,valueDx=44)=>{
+      txt(label,x,y,'text');
+      const lines=splitTwoLines(value);
+      lines.forEach((part,i)=>txt(part,x+valueDx,y+i*10,i?'small':'bold'));
+      const lineY=y+(lines.length>1?15:5);
+      line(x,lineY,x+w,lineY);
+      return lines.length;
+    };
+    const dateOnly=value=>value?new Date(value+'T00:00:00').toLocaleDateString('ru-RU'):'';
+    const formatDate=d=>d.toLocaleDateString('ru-RU');
+    const formatTime=d=>d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const fio=x=>x.fullName||[x.lastName,x.firstName,x.middleName].filter(Boolean).join(' ');
+    const legalFormFull=value=>{
+      const form=(value||'').trim().toLocaleUpperCase('ru-RU');
+      if(form==='ИП')return 'ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ';
+      if(form==='ООО')return 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ';
+      return form;
+    };
+    const normalizeUrl=value=>/^https?:\/\//i.test(value||'')?value:'https://'+value;
+    const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+    const parseOpenMeta=value=>{
+      const meta={};
+      String(value||'').split(';').forEach(part=>{
+        const [key,...rest]=part.split('=');
+        if(key&&rest.length)meta[key.trim()]=rest.join('=').trim();
+      });
+      return meta;
+    };
+    const scheduleLeadForDriver=d=>{
+      try{
+        const s=readLocal('taxichiProScheduleSettings',{});
+        const key=d.id||d.phone||fio(d);
+        return Number(s.drivers?.[key]?.leadMinutes??s.defaultLead??40);
+      }catch{return 40}
+    };
+    const buildShiftTimes=(openedAt,leadMinutes)=>{
+      const lead=Number.isFinite(Number(leadMinutes))?Number(leadMinutes):40;
+      const exit=new Date(openedAt.getTime()+Math.max(0,lead)*60000);
+      const total=clamp(Math.round(lead),30,38);
+      const beforeExit=clamp(Math.round(total/2),15,19);
+      const beforeShift=clamp(total-beforeExit,15,19);
+      const shiftStart=new Date(exit.getTime()-beforeExit*60000);
+      const medical=new Date(shiftStart.getTime()-beforeShift*60000);
+      const end=new Date(medical.getTime()+12*60*60*1000);
+      return {medical,tech:shiftStart,shiftStart,exit,end};
+    };
+
+    async function loadRemoteWaybill(id){
+      if(!id)return null;
+      try{
+        const response=await fetch(`${SUPABASE_URL}/rest/v1/waybills?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`},cache:'no-store'});
+        if(!response.ok)return null;
+        const rows=await response.json();
+        return rows[0]||null;
+      }catch{return null}
+    }
+    function stampDate(value){return value?dateOnly(value):'—'}
+    function shortText(value,max=34){
+      const text=String(value||'—');
+      return text.length>max?text.slice(0,max-1)+'…':text;
+    }
+    function drawStamp(person,y){
+      const name=fio(person)||'—';
+      const cert=person.electronicSignature||person.certificate||'—';
+      const from=stampDate(person.signatureFrom);
+      const until=stampDate(person.signatureUntil||person.validUntil);
+      rect(350,y+7,202,49,'stampBox',0);
+      txt('ДОКУМЕНТ ПОДПИСАН УСИЛЕННОЙ',451,y+18,'stamp','middle');
+      txt('КВАЛИФИЦИРОВАННОЙ ЭЛЕКТРОННОЙ ПОДПИСЬЮ',451,y+27,'stamp','middle');
+      txtFit(`Сертификат: ${cert}`,356,y+36,190,'stamp');
+      txt(`Владелец: ${shortText(name)}`,451,y+45,'stamp','middle');
+      txtFit(`Действителен: с ${from} по ${until}`,356,y+54,190,'stamp');
+    }
+    function bigRow(y,labelLines,person,dt){
+      rect(36,y,522,64);
+      line(218,y,218,y+64); line(280,y,280,y+64); line(342,y,342,y+64);
+      multiline(labelLines,46,y+17,'block',10.5);
+      center(formatDate(dt),218,y,62,64,'bold');
+      center(formatTime(dt),280,y,62,64,'bold');
+      drawStamp(person,y);
+    }
+    function drawSignature(raw,left,top,width,height){
+      if(!raw)return;
+      const strokes=[];let stroke=[];
+      raw.split(';').forEach(token=>{
+        if(token==='|'){if(stroke.length){strokes.push(stroke);stroke=[]}}
+        else{
+          const p=token.split(',').map(Number);
+          if(p.length===2&&Number.isFinite(p[0])&&Number.isFinite(p[1]))stroke.push(p);
+        }
+      });
+      if(stroke.length)strokes.push(stroke);
+      const points=strokes.flat();
+      if(points.length<2)return;
+      const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+      const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+      const scale=Math.min(width/Math.max(1,maxX-minX),height/Math.max(1,maxY-minY));
+      strokes.forEach(linePoints=>{
+        const mapped=linePoints.map(p=>({x:left+(p[0]-minX)*scale,y:top+(p[1]-minY)*scale}));
+        if(mapped.length<2)return;
+        let d=`M ${mapped[0].x} ${mapped[0].y}`;
+        for(let i=1;i<mapped.length-1;i++){
+          const mid={x:(mapped[i].x+mapped[i+1].x)/2,y:(mapped[i].y+mapped[i+1].y)/2};
+          d+=` Q ${mapped[i].x} ${mapped[i].y} ${mid.x} ${mid.y}`;
+        }
+        const last=mapped[mapped.length-1];
+        d+=` L ${last.x} ${last.y}`;
+        n('path',{d,class:'sig'});
+      });
+    }
+    function drawQr(value,y=742){
+      const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none'});
+      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`);
+    }
+
+    (async()=>{
+      const id=q.get('id')||'1';
+      const localWaybills=readLocal('taxichiProWaybills',[]);
+      let w=localWaybills.find(x=>String(x.id)===id)||seedW;
+      const remote=await loadRemoteWaybill(id);
+      if(remote)w=remote;
+      const drivers=readLocal('taxichiProDrivers',[]);
+      const vehicles=readLocal('taxichiProVehicles',[]);
+      const orgs=readLocal('taxichiProOrganizations',[]);
+      const staff=readLocal('taxichiProStaff',[]);
+      const v=vehicles.find(x=>x.plate===w.plate)||{};
+      const d=Object.assign({},defaultDriver,drivers.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{});
+      const o=Object.assign({},defaultOrg,orgs.find(x=>x.id===(v.organizationId||d.organizationId))||{});
+      const medic=staff.find(x=>x.id===o.medicId)||defaultMedic;
+      const mechanic=staff.find(x=>x.id===o.mechanicId)||defaultMechanic;
+      const dt=new Date(w.date||Date.now());
+      const meta=parseOpenMeta(w.openedBy||w.opened_by||'');
+      const leadMinutes=Number(meta.lead??scheduleLeadForDriver(d));
+      const times=buildShiftTimes(dt,leadMinutes);
+      const {medical,tech,shiftStart,exit,end}=times;
+      const orgShort=`${o.legalForm||''} ${o.name}`.trim();
+      const orgFooter=`${legalFormFull(o.legalForm)} ${o.name||''}`.trim().toLocaleUpperCase('ru-RU');
+      const licensePeriod=(d.licenseFrom||d.licenseUntil)?`с ${dateOnly(d.licenseFrom)||'—'} до ${dateOnly(d.licenseUntil)||'—'}`:'';
+      const odometer=Number(w.odometer||0).toLocaleString('ru-RU');
+      const permitUrl=normalizeUrl(v.taxiPermitUrl||d.taxiPermitUrl||'https://fgis-taxi.ru/');
+
+      txt(`ПУТЕВОЙ ЛИСТ № ${w.id||id}`,36,44,'title');
+      txt('легкового такси',36,61,'bold');
+      txt(`Срок действия путевого листа: "с ${formatDate(medical)} по ${formatDate(end)}"`,36,80,'text');
+      txt('ФОРМА ПУТЕВОГО ЛИСТА РАЗРАБОТАНА В СООТВЕТСТВИИ',318,42,'orderText');
+      txt('С ПРИКАЗОМ МИНТРАНСА РОССИИ №390 ОТ 28.09.2022 г.',318,56,'orderText');
+
+      lineText('Организация:',orgShort,36,118,374,76);
+      const addrShift=addressText('Адрес:',o.address,36,138,374,44)>1?18:0;
+      lineText('ОГРН(ИП):',`${o.ogrn},`,36,158+addrShift,374,68);
+      txt(`ИНН: ${o.inn}, Тел.: ${o.phone}`,198,158+addrShift,'bold');
+      lineText('Марка:',w.car||v.car||'KIA RIO',36,184+addrShift,170,43);
+      lineText('Гос. номер:',w.plate||v.plate||'В148РВ799',260,184+addrShift,150,70);
+      txt('Водитель:',36,207+addrShift,'text');
+      const driverName=(w.driver||'Баратов Асадбек Екубжанович').split(' ');
+      txt(driverName.slice(0,2).join(' '),88,207+addrShift,'bold');
+      txt(driverName.slice(2).join(' '),88,220+addrShift,'bold');
+      line(36,226+addrShift,206,226+addrShift);
+      txt('ВУ №:',260,207+addrShift,'text');
+      txt(d.license,294,207+addrShift,'license');
+      txt(licensePeriod||'с 16.01.2018 до 16.01.2028',294,220+addrShift,'small');
+      line(260,226+addrShift,410,226+addrShift);
+      lineText('КИС АРТ:',d.kisArt||'0000597358',36,244+addrShift,170,58);
+      lineText('ОСГОП №:',v.osgopNumber||d.osgopNumber||'XXX0598830871',260,244+addrShift,150,58);
+
+      let infoY=92;
+      const infoCenter=487;
+      [['Телефон (вод.)',d.phone||w.phone],['СНИЛС (вод.)',d.snils],['ИНН (вод.)',d.inn],['Вид сообщения','городское / пригородное']].forEach((p,i)=>{
+        const y=infoY;
+        const h=i===3?42:32;
+        rect(420,y,134,h);
+        txt(p[0],infoCenter,y+12,'tinyBold','middle');
+        if(i===3){
+          txt(p[1]||'—',infoCenter,y+25,'modeText','middle');
+          txt('междугородное',infoCenter,y+35,'modeText','middle');
+        }else txt(p[1]||'—',infoCenter,y+25,'infoValue','middle');
+        infoY+=h;
+      });
+      txt('Перевозка пассажиров и',infoCenter,243,'small','middle');
+      txt('багажа легковым такси',infoCenter,254,'small','middle');
+      txt(`Разрешение: № ${v.taxiPermitNumber||d.taxiPermitNumber||'035678'}`,infoCenter,270,'permit','middle');
+
+      bigRow(276,['ПРОШЕЛ ПРЕДРЕЙСОВЫЙ','МЕДИЦИНСКИЙ ОСМОТР.','К ИСПОЛНЕНИЮ ТРУДОВЫХ','ОБЯЗАННОСТЕЙ ДОПУЩЕН'],medic,medical);
+      bigRow(348,['КОНТРОЛЬ ТЕХНИЧЕСКОГО','СОСТОЯНИЯ ТРАНСПОРТНОГО','СРЕДСТВА ПРОЙДЕН'],mechanic,tech);
+
+      rect(36,420,522,78);
+      line(218,420,218,498); line(280,420,280,472); line(342,420,342,498);
+      line(36,446,342,446); line(36,472,342,472);
+      txt('Начало смены',46,437,'bold');
+      txt('Выезд с парковки',46,463,'bold');
+      txt('Показание одометра, км',46,489,'bold');
+      center(formatDate(shiftStart),218,420,62,26,'bold');
+      center(formatTime(shiftStart),280,420,62,26,'bold');
+      center(formatDate(exit),218,446,62,26,'bold');
+      center(formatTime(exit),280,446,62,26,'bold');
+      center(odometer,218,472,124,26,'odo');
+      txt('ВЫПУСК НА ЛИНИЮ',450,449,'large','middle');
+      txt('РАЗРЕШЕН',450,470,'large','middle');
+
+      rect(36,506,522,44);
+      [
+        'ПАМЯТКА ВОДИТЕЛЮ! Приказ Минтранса России от 28.09.2022 г. № 390 устанавливает возможность формирования путевого листа',
+        'в форме электронного документа и отменяет обязательное использование штампов в путевой документации. Приказ ФНС России',
+        'от 17.02.2023 г. № ЕД-7-26/116@ закрепляет формат электронного путевого листа, файл которого подписывается',
+        'усиленной квалифицированной электронной подписью или усиленной неквалифицированной электронной подписью.'
+      ].forEach((lineText,i)=>txtFit(lineText,42,518+i*8.2,510,'memoText'));
+
+      rect(36,558,522,34); line(332,558,332,592);
+      txt('ВОДИТЕЛЬ:',42,579,'text');
+      txt(w.driver||'Баратов Асадбек Екубжанович',106,579,'bold');
+      txt('ПОДПИСЬ:',342,579,'text');
+      drawSignature(w.driver_signature||w.driverSignature||'',414,541,136,56);
+
+      rect(36,600,522,54);
+      line(36,620,558,620); line(166,620,166,654); line(296,620,296,654); line(426,620,426,654);
+      center('РАЗДЕЛЕНИЕ РАБОЧЕГО ДНЯ (СМЕНЫ)',36,600,522,20,'bold');
+      center('ПЕРЕРЫВ НАЧАТ',36,620,130,22,'text');
+      center('ПЕРЕРЫВ ОКОНЧЕН',166,620,130,22,'text');
+      center('ОБЕД НАЧАТ',296,620,130,22,'text');
+      center('ОБЕД ОКОНЧЕН',426,620,132,22,'text');
+
+      rect(36,662,522,70);
+      line(218,662,218,732); line(280,662,280,732); line(342,662,342,732); line(36,697,558,697);
+      txt('ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ',46,678,'block');
+      txt('МЕДИЦИНСКИЙ ОСМОТР',46,691,'block');
+      txt('ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ',46,713,'block');
+      txt('ТЕХНИЧЕСКИЙ ОСМОТР',46,726,'block');
+
+      rect(36,740,522,80);
+      line(218,740,218,820); line(280,740,280,793); line(342,740,342,820);
+      line(36,766,342,766); line(36,793,342,793);
+      txt('Возвращение на парковку',46,757,'bold');
+      txt('Окончание смены',46,784,'bold');
+      txt('Показание одометра, км',46,810,'bold');
+      center(formatDate(end),218,766,62,27,'bold');
+      center(formatTime(end),280,766,62,27,'bold');
+      drawQr(permitUrl,742);
+      center(orgFooter,36,840,522,20,'footer');
+    })();
+  </script>
+</body>
+</html>
+

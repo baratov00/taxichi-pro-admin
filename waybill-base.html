@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Путевой лист Taxichi Pro</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;color:#111;margin:0;background:#ddd;font-size:11px}
+    .sheet{width:210mm;min-height:297mm;margin:14px auto;background:#fff;padding:10mm}
+    .top{display:grid;grid-template-columns:1fr 1.05fr;gap:20px;align-items:start}
+    .title{font-size:17px;font-weight:900}
+    .taxi-kind{display:block;margin-top:2px;font-weight:800}
+    .period{border-bottom:1px solid #222;padding:5px 3px 6px;margin-top:2px;font-size:10px;font-weight:700}
+    .order{text-align:center;font-weight:800;font-size:10px;line-height:1.32;width:100%;margin-left:auto}
+    .order span{display:block;white-space:nowrap}
+    .line{border-bottom:1px solid #222;padding:4px 3px}
+    .info{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;margin-top:9px}
+    .codes{border-collapse:collapse;width:100%}
+    .codes td{border:1px solid #111;padding:4px;text-align:center;line-height:1.22}
+    .codes b{font-weight:900}
+    .driver-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin-top:7px}
+    .license-period{display:block;font-size:9px;font-weight:700;margin-top:2px}
+    .taxi-permit{grid-column:2;align-self:end;border-bottom:1px solid #222;padding:2px 3px 4px;font-size:8px;font-weight:700;line-height:1.2}
+    .permit-number{margin-left:28px;font-weight:900;white-space:nowrap}
+    .bigrow{display:grid;grid-template-columns:1.45fr .45fr .45fr 1.85fr;border:1px solid #111;margin-top:7px;min-height:64px}
+    .bigrow>div{border-right:1px solid #111;padding:7px}
+    .bigrow>div:last-child{border:0}
+    .label{font-size:11px;font-weight:900;line-height:1.18;display:flex;align-items:center}
+    .date-cell,.time-cell{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800}
+    .stamp{border:1.5px solid #394ee8;color:#2439c7;border-radius:0;text-align:center;padding:5px;font-size:8px;line-height:1.15}
+    .stamp span{overflow-wrap:anywhere;word-break:break-word}
+    .shift{display:grid;grid-template-columns:1.25fr .43fr .43fr 1.45fr;grid-template-rows:32px 32px 32px;border:1px solid #111}
+    .shift>div{border-right:1px solid #111;border-bottom:1px solid #111}
+    .shift>div:nth-last-child(-n+3){border-bottom:0}
+    .shift-label{padding:8px 9px;font-weight:800}
+    .measure{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:15px}
+    .span-2{grid-column:2/4}
+    .c1{grid-column:1}.c2{grid-column:2}.c3{grid-column:3}
+    .r1{grid-row:1}.r2{grid-row:2}.r3{grid-row:3}
+    .release{text-align:center;font-family:serif;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.15;padding:7px;grid-column:4;grid-row:1/4;border-right:0!important;border-bottom:0!important}
+    .memo{font-size:8px;line-height:1.18;text-align:center;padding:7px 8px}
+    .signature{display:grid;grid-template-columns:1.55fr 1.45fr;border:1px solid #111;min-height:70px}
+    .signature div{padding:8px;border-right:1px solid #111}
+    .signature div:last-child{border-right:0}
+    .driver-signature{position:relative;min-height:58px;font-weight:400}
+    .signature b{font-weight:900}
+    .driver-signature svg{position:absolute;left:82px;right:2px;top:-18px;width:calc(100% - 84px);height:92px}
+    .breaks{margin-top:6px;border-collapse:collapse;width:100%;text-align:center}
+    .breaks td{border:1px solid #111;padding:5px}
+    .post{display:grid;grid-template-columns:1.45fr .45fr .45fr 1.85fr;border:1px solid #111;margin-top:7px}
+    .post>div{border-right:1px solid #111;padding:9px;min-height:62px}
+    .post>div:nth-child(4n){border-right:0}
+    .qr-box{display:flex;align-items:center;justify-content:center;padding:8px;grid-column:4;grid-row:1/4;border-right:0!important;border-bottom:0!important}
+    .qr{width:104px;height:104px;display:grid;grid-template-columns:repeat(21,1fr);grid-template-rows:repeat(21,1fr);gap:0;background:transparent;border:0;box-shadow:none;overflow:hidden}
+    .qr i{display:block;background:#fff}
+    .qr i.on{background:#111}
+    .qr img{width:100%;height:100%;display:block;mix-blend-mode:multiply}
+    .footer{text-align:center;font-size:14px;font-weight:800;margin-top:18px}
+    .actions{text-align:center;margin:12px}
+    .actions button{background:#ffd21c;border:0;padding:12px 20px;font-weight:bold;border-radius:8px}
+    @media print{body{background:#fff}.sheet{margin:0}.actions{display:none}}
+  </style>
+</head>
+<body>
+  <div class="actions"><button onclick="print()">Сохранить или распечатать PDF</button></div>
+  <main class="sheet">
+    <div class="top">
+      <div>
+        <div class="title">ПУТЕВОЙ ЛИСТ № <span id="number"></span></div>
+        <span class="taxi-kind">легкового такси</span>
+        <div class="period" id="period"></div>
+      </div>
+      <div class="order"><span>ФОРМА ПУТЕВОГО ЛИСТА РАЗРАБОТАНА В СООТВЕТСТВИИ</span><span>С ПРИКАЗОМ МИНТРАНСА РОССИИ №390 ОТ 28.09.2022 г.</span></div>
+    </div>
+
+    <div class="info">
+      <div>
+        <div class="line"><b>Организация:</b> <span id="organization"></span></div>
+        <div class="line"><b>Адрес:</b> <span id="address"></span></div>
+        <div class="line"><b>ОГРН(ИП):</b> <span id="ogrn"></span> &nbsp; <b>ИНН:</b> <span id="orgInn"></span> &nbsp; <b>Тел.:</b> <span id="orgPhone"></span></div>
+        <div class="driver-grid">
+          <div class="line">Марка: <b id="car"></b></div>
+          <div class="line">Гос. номер: <b id="plate"></b></div>
+          <div class="line">Водитель: <b id="driver"></b></div>
+          <div class="line">ВУ №: <b id="license"></b><span class="license-period" id="licensePeriod"></span></div>
+          <div class="line">КИС АРТ: <b id="kis"></b></div>
+          <div class="line">ОСГОП №: <b id="osgop"></b></div>
+          <div></div>
+          <div class="taxi-permit">Перевозка пассажиров и<br>багажа легковым такси <span class="permit-number">Разрешение: № <b id="taxiPermit"></b></span></div>
+        </div>
+      </div>
+      <table class="codes">
+        <tr><td><b>Телефон (вод.)</b> <span id="driverPhone"></span></td></tr>
+        <tr><td><b>СНИЛС (вод.)</b> <span id="snils"></span></td></tr>
+        <tr><td><b>ИНН (вод.)</b> <span id="driverInn"></span></td></tr>
+        <tr><td><b>Вид сообщения</b><br>городское / пригородное<br>&nbsp;&nbsp;&nbsp;&nbsp;междугородное</td></tr>
+      </table>
+    </div>
+
+    <section class="bigrow">
+      <div class="label">ПРОШЕЛ ПРЕДРЕЙСОВЫЙ МЕДИЦИНСКИЙ ОСМОТР. К ИСПОЛНЕНИЮ ТРУДОВЫХ ОБЯЗАННОСТЕЙ ДОПУЩЕН</div>
+      <div class="date-cell" id="medDate"></div>
+      <div class="time-cell" id="medTime"></div>
+      <div><div class="stamp">ДОКУМЕНТ ПОДПИСАН УСИЛЕННОЙ<br>КВАЛИФИЦИРОВАННОЙ ЭЛЕКТРОННОЙ ПОДПИСЬЮ<br>Сертификат: <span id="medicCert"></span><br>Владелец: <b id="medic"></b><br>Действителен: с <span id="medicFrom"></span> по <span id="medicUntil"></span></div></div>
+    </section>
+
+    <section class="bigrow">
+      <div class="label">КОНТРОЛЬ ТЕХНИЧЕСКОГО СОСТОЯНИЯ ТРАНСПОРТНОГО СРЕДСТВА ПРОЙДЕН</div>
+      <div class="date-cell" id="mechDate"></div>
+      <div class="time-cell" id="mechTime"></div>
+      <div><div class="stamp">ДОКУМЕНТ ПОДПИСАН УСИЛЕННОЙ<br>КВАЛИФИЦИРОВАННОЙ ЭЛЕКТРОННОЙ ПОДПИСЬЮ<br>Сертификат: <span id="mechanicCert"></span><br>Владелец: <b id="mechanic"></b><br>Действителен: с <span id="mechanicFrom"></span> по <span id="mechanicUntil"></span></div></div>
+    </section>
+
+    <section class="shift">
+      <div class="shift-label c1 r1">Начало смены</div>
+      <div class="date-cell c2 r1" id="shiftStartDate"></div>
+      <div class="time-cell c3 r1" id="shiftStartTime"></div>
+      <div class="shift-label c1 r2">Выезд с парковки</div>
+      <div class="date-cell c2 r2" id="parkingExitDate"></div>
+      <div class="time-cell c3 r2" id="parkingExitTime"></div>
+      <div class="shift-label c1 r3">Показание одометра, км</div>
+      <div class="measure span-2 r3"><span id="odo"></span></div>
+      <div class="release">ВЫПУСК НА ЛИНИЮ<br>РАЗРЕШЕН</div>
+    </section>
+
+    <div class="memo"><b>ПАМЯТКА ВОДИТЕЛЮ!</b> Приказ Минтранса России от 28.09.2022 г. № 390 устанавливает возможность формирования путевого листа в форме электронного документа и отменяет обязательное использование штампов в путевой документации. Приказ ФНС России от 17.02.2023 г. № ЕД-7-26/116@ закрепляет формат электронного путевого листа, файл которого подписывается усиленной квалифицированной электронной подписью или усиленной неквалифицированной электронной подписью.</div>
+    <div class="signature"><div>ВОДИТЕЛЬ: <b id="driver2"></b></div><div class="driver-signature">ПОДПИСЬ:<svg id="driverSignature" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet"></svg></div></div>
+
+    <table class="breaks">
+      <tr><td colspan="4"><b>РАЗДЕЛЕНИЕ РАБОЧЕГО ДНЯ (СМЕНЫ)</b></td></tr>
+      <tr><td>ПЕРЕРЫВ НАЧАТ</td><td>ПЕРЕРЫВ ОКОНЧЕН</td><td>ОБЕД НАЧАТ</td><td>ОБЕД ОКОНЧЕН</td></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td></tr>
+    </table>
+
+    <section class="post">
+      <div class="label">ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ МЕДИЦИНСКИЙ ОСМОТР</div>
+      <div></div><div></div><div></div>
+      <div class="label">ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ ТЕХНИЧЕСКИЙ ОСМОТР</div>
+      <div></div><div></div><div></div>
+    </section>
+
+    <section class="shift">
+      <div class="shift-label c1 r1">Возвращение на парковку</div>
+      <div class="date-cell c2 r1" id="returnDate"></div>
+      <div class="time-cell c3 r1" id="returnTime"></div>
+      <div class="shift-label c1 r2">Окончание смены</div>
+      <div class="date-cell c2 r2" id="endDate"></div>
+      <div class="time-cell c3 r2" id="endTime"></div>
+      <div class="shift-label c1 r3">Показание одометра, км</div>
+      <div class="measure span-2 r3" id="endOdo"></div>
+      <div class="qr-box"><div class="qr" id="qr"></div></div>
+    </section>
+
+    <div class="footer" id="footerOrg"></div>
+  </main>
+
+  <script>
+    const q=new URLSearchParams(location.search);
+    const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
+    const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
+    const ACTIVE_ADMIN_ID=q.get('admin')||sessionStorage.getItem('taxichiDispatcherSession')||'demo';
+    const ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
+    const storageKey=key=>ADMIN_DATA_KEYS.has(key)?`taxichiProAdmin:${ACTIVE_ADMIN_ID}:${key}`:key;
+    const readLocal=(key,fallback)=>{try{const raw=localStorage.getItem(storageKey(key)),legacy=ACTIVE_ADMIN_ID==='demo'?localStorage.getItem(key):null;return JSON.parse((raw??legacy)??'null')??fallback}catch{return fallback}};
+    async function loadRemoteWaybill(id){
+      if(!id)return null;
+      try{
+        const response=await fetch(`${SUPABASE_URL}/rest/v1/waybills?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`},cache:'no-store'});
+        if(!response.ok)return null;
+        const rows=await response.json();
+        return rows[0]||null;
+      }catch{return null}
+    }
+    const seedW=[{id:'ТР-000124',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:125430,date:'2026-07-05T08:42',status:'Открыто'}];
+    const ws=readLocal('taxichiProWaybills',null)||seedW;
+    let w=ws.find(x=>String(x.id)===q.get('id'))||ws[0];
+    (async()=>{
+    const remote=await loadRemoteWaybill(q.get('id'));
+    if(remote)w=remote;
+    const vs=readLocal('taxichiProVehicles',[]);
+    const v=vs.find(x=>x.plate===w.plate)||{};
+    const ds=readLocal('taxichiProDrivers',[]);
+    const d=ds.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{license:'МКК413031000885666',licenseFrom:'2023-01-12',licenseUntil:'2033-01-12',kisArt:'0000597358',phone:'+79933532569',snils:'213-055-002 94',inn:'775135449026'};
+    const os=readLocal('taxichiProOrganizations',[]);
+    const o=os.find(x=>x.id===(v.organizationId||d.organizationId))||{legalForm:'ИП',name:'Шиндина Анастасия Вадимовна',address:'г. Москва',ogrn:'321774600123456',inn:'772796701039',phone:'+79153955383'};
+    const ss=readLocal('taxichiProStaff',[]);
+    const m=ss.find(x=>x.id===o.medicId)||{lastName:'Соколова',firstName:'Елена',middleName:'Игоревна'};
+    const k=ss.find(x=>x.id===o.mechanicId)||{lastName:'Петров',firstName:'Алексей',middleName:'Викторович'};
+    const dt=new Date(w.date);
+    const end=new Date(dt.getTime()+12*60*60*1000);
+    const exit=new Date(dt.getTime()+15*60*1000);
+    const returned=new Date(end.getTime()-15*60*1000);
+    const txt=(id,v)=>document.getElementById(id).textContent=v||'—';
+    const fio=x=>[x.lastName,x.firstName,x.middleName].filter(Boolean).join(' ');
+    const date=x=>x.toLocaleDateString('ru-RU');
+    const time=x=>x.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const dateOnly=x=>x?new Date(x+'T00:00:00').toLocaleDateString('ru-RU'):'';
+
+    txt('number',w.id);
+    txt('period',`Срок действия путевого листа с ${date(dt)} по ${date(end)}`);
+    const legalFormFull=value=>value==='ИП'?'ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ':value==='ООО'?'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ':value||'';
+    txt('organization',`${o.legalForm||''} ${o.name}`.trim());
+    txt('footerOrg',`${legalFormFull(o.legalForm)} ${o.name}`.trim());
+    txt('address',o.address);
+    txt('ogrn',o.ogrn);
+    txt('orgInn',o.inn);
+    txt('orgPhone',o.phone);
+    txt('car',w.car);
+    txt('plate',w.plate);
+    txt('driver',w.driver);
+    txt('driver2',w.driver);
+    txt('license',d.license);
+    txt('licensePeriod',d.licenseFrom||d.licenseUntil?`с ${dateOnly(d.licenseFrom)||'—'} до ${dateOnly(d.licenseUntil)||'—'}`:'');
+    txt('kis',d.kisArt);
+    txt('osgop',v.osgopNumber||d.osgopNumber);
+    txt('taxiPermit',v.taxiPermitNumber||d.taxiPermitNumber);
+    txt('driverPhone',d.phone||w.phone);
+    txt('snils',d.snils);
+    txt('driverInn',d.inn);
+    txt('medic',fio(m));
+    txt('mechanic',fio(k));
+    txt('medicCert',m.electronicSignature||m.certificate);
+    txt('mechanicCert',k.electronicSignature||k.certificate);
+    txt('medicFrom',dateOnly(m.signatureFrom));
+    txt('medicUntil',dateOnly(m.signatureUntil||m.validUntil));
+    txt('mechanicFrom',dateOnly(k.signatureFrom));
+    txt('mechanicUntil',dateOnly(k.signatureUntil||k.validUntil));
+    ['medDate','mechDate'].forEach(id=>txt(id,date(dt)));
+    ['medTime','mechTime'].forEach(id=>txt(id,time(dt)));
+    txt('shiftStartDate',date(dt));
+    txt('shiftStartTime',time(dt));
+    txt('parkingExitDate',date(exit));
+    txt('parkingExitTime',time(exit));
+    txt('returnDate',date(returned));
+    txt('returnTime',time(returned));
+    txt('endDate',date(end));
+    txt('endTime',time(end));
+    txt('odo',Number(w.odometer).toLocaleString('ru-RU'));
+
+    function drawFallbackQr(value){
+      const qr=document.getElementById('qr'),size=21;
+      qr.innerHTML='';
+      let hash=0;
+      for(let i=0;i<value.length;i++)hash=(hash*31+value.charCodeAt(i))>>>0;
+      const finder=(x,y)=>x<7&&y<7||x>13&&y<7||x<7&&y>13;
+      for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+        const cell=document.createElement('i');
+        const inFinder=finder(x,y);
+        const fx=x<7?x:x>13?x-14:x,fy=y<7?y:y>13?y-14:y;
+        const finderOn=inFinder&&(fx===0||fx===6||fy===0||fy===6||(fx>=2&&fx<=4&&fy>=2&&fy<=4));
+        const dataOn=((x*17+y*29+hash+(x*y))%5)<2;
+        if(finderOn||(!inFinder&&dataOn))cell.className='on';
+        qr.append(cell);
+      }
+    }
+    function drawQr(value){
+      const qr=document.getElementById('qr');
+      const img=document.createElement('img');
+      img.alt='QR-код ФГИС';
+      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`;
+      img.onerror=()=>drawFallbackQr(value);
+      qr.append(img);
+    }
+    const normalizeUrl=value=>/^https?:\/\//i.test(value||'')?value:'https://'+value;
+    const permitUrl=normalizeUrl(v.taxiPermitUrl||d.taxiPermitUrl||'https://fgis-taxi.ru/');
+    drawQr(permitUrl);
+    function drawSignature(raw){
+      const svg=document.getElementById('driverSignature');
+      if(!raw)return;
+      const strokes=[];let stroke=[];
+      raw.split(';').forEach(token=>{if(token==='|'){if(stroke.length){strokes.push(stroke);stroke=[]}}else{const p=token.split(',').map(Number);if(p.length===2&&Number.isFinite(p[0])&&Number.isFinite(p[1]))stroke.push(p)}});
+      if(stroke.length)strokes.push(stroke);
+      const points=strokes.flat();
+      if(points.length<2)return;
+      const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+      const sx=300/Math.max(1,maxX-minX),sy=100/Math.max(1,maxY-minY),scale=Math.min(sx,sy);
+      strokes.forEach(line=>{
+        let d='';
+        line.forEach((p,i)=>{const x=10+(p[0]-minX)*scale,y=10+(p[1]-minY)*scale;d+=(i?' L ':'M ')+x.toFixed(1)+' '+y.toFixed(1)});
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d',d);
+        path.setAttribute('fill','none');
+        path.setAttribute('stroke','#263a9b');
+        path.setAttribute('stroke-width','5.5');
+        path.setAttribute('stroke-linecap','round');
+        path.setAttribute('stroke-linejoin','round');
+        svg.append(path);
+      });
+    }
+    drawSignature(w.driver_signature||w.driverSignature||'');
+    })();
+  </script>
+</body>
+</html>
+
