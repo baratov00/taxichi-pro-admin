@@ -165,7 +165,7 @@
     async function loadRemoteWaybill(id){
       if(!id)return null;
       try{
-        const response=await fetch(`${SUPABASE_URL}/rest/v1/waybills?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`},cache:'no-store'});
+        const response=await fetch(`${SUPABASE_URL}/rest/v1/waybills?select=*&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,'Accept-Profile':'public','Content-Profile':'public'},cache:'no-store'});
         if(!response.ok)return null;
         const rows=await response.json();
         return rows[0]||null;
