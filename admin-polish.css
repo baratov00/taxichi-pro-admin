@@ -121,19 +121,19 @@ nav button.active,.report-link.active{background:#ffd21c!important;color:#17191c
 .archive-waybill-list span{display:block;margin-top:2px;color:#737b84;font-size:12px}
 @media(max-width:760px){.archive-waybill-list article{grid-template-columns:1fr}.archive-waybill-list .pdf-link{width:max-content}}
 
-#staffDialog{background:#0f1013;color:#eef1f5}
-#staffDialog .close{color:#eef1f5}
-#staffDialog h2{color:#fff}
+#staffDialog{background:#fff;color:#17191c}
+#staffDialog .close{color:#17191c}
+#staffDialog h2{color:#17191c}
 #staffForm{display:grid;gap:18px}
-.staff-section{display:grid;gap:16px;padding:18px;border:1px solid #2d3037;border-radius:10px;background:#17181d}
-.staff-section h3{margin:0;color:#fff;font-size:15px}
+.staff-section{display:grid;gap:16px;padding:18px;border:1px solid #dfe3e8;border-radius:10px;background:#fff}
+.staff-section h3{margin:0;color:#17191c;font-size:15px}
 .staff-section .form-grid{grid-template-columns:1fr 1fr;gap:14px}
-.staff-section label{color:#eef1f5;font-size:12px;font-weight:850}
-.staff-section input,.staff-section select,.staff-section textarea{background:#222328!important;border-color:#3a3d45!important;color:#f5f7fa!important}
-.staff-section input::placeholder,.staff-section textarea::placeholder{color:#9aa3b2}
-.staff-section small{display:block;margin-top:7px;color:#8e96a4}
+.staff-section label{color:#303640;font-size:12px;font-weight:850}
+.staff-section input,.staff-section select,.staff-section textarea{background:#fff!important;border-color:#cfd6df!important;color:#17191c!important}
+.staff-section input::placeholder,.staff-section textarea::placeholder{color:#8d96a3}
+.staff-section small{display:block;margin-top:7px;color:#6b7280}
 .staff-section textarea{height:auto;min-height:52px}
-#staffDialog .actions{border-top:1px solid #2d3037;padding-top:16px}
+#staffDialog .actions{border-top:1px solid #dfe3e8;padding-top:16px}
 #staffDialog .approve{background:#ffd21c;color:#17191c}
 
 @media(max-width:760px){
