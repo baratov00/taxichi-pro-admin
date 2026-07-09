@@ -135,6 +135,8 @@ nav button.active,.report-link.active{background:#ffd21c!important;color:#17191c
 .staff-section textarea{height:auto;min-height:52px}
 #staffDialog .actions{border-top:1px solid #dfe3e8;padding-top:16px}
 #staffDialog .approve{background:#ffd21c;color:#17191c}
+.warn-text{color:#b45309!important}
+.driver-cell:has(.warn-text){background:#fff7ed!important;border-color:#fed7aa!important}
 
 @media(max-width:760px){
  body{display:block;background:#f4f5f6}
