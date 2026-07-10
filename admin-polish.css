@@ -137,6 +137,11 @@ nav button.active,.report-link.active{background:#ffd21c!important;color:#17191c
 #staffDialog .approve{background:#ffd21c;color:#17191c}
 .warn-text{color:#b45309!important}
 .driver-cell:has(.warn-text){background:#fff7ed!important;border-color:#fed7aa!important}
+.admin-balance-widget{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:5px 7px 5px 12px;border-radius:999px;background:linear-gradient(135deg,#fff8d7,#ffffff);border:1px solid #f1d45b;box-shadow:0 8px 18px rgba(42,36,8,.08);color:#181818}
+.admin-balance-widget span{font-size:12px;font-weight:900;white-space:nowrap;color:#181818}
+.admin-balance-widget button{display:grid;place-items:center;width:30px!important;height:30px!important;min-width:30px;padding:0!important;border:0;border-radius:50%;font-size:19px;line-height:1;font-weight:1000;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.13)}
+.admin-balance-widget .balance-plus{background:#19a45b;color:#fff}
+.admin-balance-widget .balance-minus{background:#c52f2f;color:#fff}
 
 @media(max-width:760px){
  body{display:block;background:#f4f5f6}
@@ -170,6 +175,8 @@ nav button.active,.report-link.active{background:#ffd21c!important;color:#17191c
  .actions button,.danger-delete{width:100%}
  .driver-actions{justify-content:stretch}
  .driver-actions button,.driver-waybill{width:100%;justify-content:center}
+ .admin-balance-widget{width:100%;justify-content:space-between;border-radius:14px}
+ .admin-balance-widget button{width:34px!important;height:34px!important;min-width:34px}
  .details{grid-template-columns:1fr}
  .settings-page{padding:12px;gap:12px}
  .settings-panel{padding:15px}
