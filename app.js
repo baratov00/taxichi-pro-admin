@@ -81,3 +81,77 @@ loginForm.onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(ne
 loadDispatchersRemote().then(accounts=>{const savedId=sessionStorage.getItem('taxichiDispatcherSession')||ACTIVE_ADMIN_ID,savedAccount=accounts.find(x=>x.id===savedId);if(savedAccount)enterDispatcher(savedAccount);else sessionStorage.removeItem('taxichiDispatcherSession')});
 const logoutButton=document.createElement('button');logoutButton.className='logout-access';logoutButton.textContent='Выйти из кабинета';logoutButton.onclick=()=>{sessionStorage.removeItem('taxichiDispatcherSession');location.href=location.pathname};$('.user').append(logoutButton);
 const card=$('#card');$('#card .close').onclick=()=>card.close();$('.approve').onclick=()=>card.close();$('.reject').onclick=()=>card.close();$('#search').oninput=applyTableFilters;render();syncWaybills();syncDriverProfiles();
+
+// Admin-balance mode from director cabinet.
+// If director selected "Пополнить через админку", the admin panel shows + / −
+// for every driver and passes balance + EPЛ price to the driver app.
+function activeDispatcherSettings(){
+  const dispatcher=(dispatcherCache||[]).find(x=>String(x.id)===String(ACTIVE_ADMIN_ID))||{};
+  const settings=dispatcher.payment_settings||{};
+  return {
+    mode: dispatcher.payment_mode==='admin_balance'?'admin_balance':dispatcher.payment_mode==='free_park'?'free_park':'subscription',
+    provider: dispatcher.payment_provider||'none',
+    price15:Number(settings.price15||0),
+    price30:Number(settings.price30||0),
+    epPrice:Number(settings.epPrice||0)
+  };
+}
+function profilePayload(row){try{return typeof row?.payload==='string'?JSON.parse(row.payload||'{}'):(row?.payload||{})}catch{return {}}}
+function profileBalanceFromPayload(payload){return Number((payload.subscription||{}).balance||0)}
+function profileHistoryFromPayload(payload){const h=(payload.subscription||{}).history;return Array.isArray(h)?h:[]}
+function money(v){return `${Number(v||0).toLocaleString('ru-RU')} ₽`}
+function mergeSubscriptionState(nextPayload,oldPayload){
+  const next={...(nextPayload.subscription||{})},old=oldPayload?.subscription||{};
+  if(next.paymentMode==='admin_balance'){
+    next.balance=Number(old.balance??next.balance??0);
+    next.history=Array.isArray(old.history)?old.history:(Array.isArray(next.history)?next.history:[]);
+  }
+  nextPayload.subscription=next;
+  return nextPayload;
+}
+appPayloadForDriver=function(d){
+  const v=vehicleForDriver(d),o=orgForDriver(d)||{},m=byId(staff,o.medicId)||{},k=byId(staff,o.mechanicId)||{},sched=driverSchedule(d),pay=activeDispatcherSettings();
+  return {adminId:ACTIVE_ADMIN_ID,driverId:d.id||'',leadMinutes:sched.leadMinutes,supportPhone:scheduleSettings.supportPhone||'',subscription:{paymentMode:pay.mode,paymentProvider:pay.provider,price15:pay.price15,price30:pay.price30,epPrice:pay.epPrice,paidUntil:d.subscriptionPaidUntil||'',paidAt:d.subscriptionPaidAt||'',balance:Number(d.balance||0),history:Array.isArray(d.balanceHistory)?d.balanceHistory:[]},driver:{fullName:full(d),firstName:d.firstName||'',lastName:d.lastName||'',middleName:d.middleName||'',phone:d.phone||'',license:d.license||'',licenseFrom:d.licenseFrom||'',licenseUntil:d.licenseUntil||'',snils:d.snils||'',inn:d.inn||'',kisArt:d.kisArt||''},vehicle:{car:v.car||d.car||'',plate:v.plate||d.plate||'',year:v.year||d.year||'',color:v.color||d.color||'',diagnosticFrom:v.diagnosticFrom||d.diagnosticFrom||'',diagnostic:v.diagnostic||d.diagnostic||'',osagoNumber:v.osagoNumber||d.osagoNumber||'',osagoFrom:v.osagoFrom||d.osagoFrom||'',osago:v.osago||d.osago||'',osgopNumber:v.osgopNumber||d.osgopNumber||'',osgopFrom:v.osgopFrom||d.osgopFrom||'',osgop:v.osgop||d.osgop||'',taxiPermitNumber:v.taxiPermitNumber||d.taxiPermitNumber||'',taxiPermitUrl:v.taxiPermitUrl||d.taxiPermitUrl||''},organization:{legalForm:o.legalForm||'',name:o.name||'',inn:o.inn||'',ogrn:o.ogrn||'',address:o.address||'',phone:o.phone||'',waybillForm:o.waybillForm||'№ 390'},medic:{fullName:m.id?full(m):'',phone:m.phone||'',certificate:m.certificate||'',electronicSignature:m.electronicSignature||'',signatureFrom:m.signatureFrom||'',signatureUntil:m.signatureUntil||'',validUntil:m.validUntil||''},mechanic:{fullName:k.id?full(k):'',phone:k.phone||'',certificate:k.certificate||'',electronicSignature:k.electronicSignature||'',signatureFrom:k.signatureFrom||'',signatureUntil:k.signatureUntil||'',validUntil:k.validUntil||''}};
+}
+driverProfileRow=function(d){return {id:d.id,phone:d.phone||'',phone_digits:phoneDigits(d.phone),password:d.password||'',payload:appPayloadForDriver(d),updated_at:new Date().toISOString()}}
+syncDriverProfile=async function(d){
+  const row=driverProfileRow(d);if(!row.phone_digits||!row.password)return false;
+  let remote=[];try{remote=await remoteProfilesByPhone(row.phone_digits)}catch(err){console.warn('driver profile precheck failed, trying fallback upsert',err)}
+  if(remote.some(profile=>!sameProfile(profile,d.id))){console.warn('driver profile exists for phone',row.phone_digits);return false}
+  const current=remote.find(profile=>sameProfile(profile,d.id));
+  row.payload=mergeSubscriptionState(row.payload,profilePayload(current));
+  try{const response=await fetch(API_BASE+'/driver_profiles?on_conflict=id',{method:'POST',headers:{...API_HEADERS,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)});if(response.ok)return true;throw new Error(await response.text())}catch(err){console.warn('driver profile table sync failed, using waybills profile fallback',err);try{return await syncProfileViaWaybills(row)}catch(fallbackErr){console.warn('driver profile fallback sync failed',fallbackErr);return false}}
+}
+async function adminAdjustDriverBalance(driverIndex,direction){
+  const d=drivers[driverIndex];if(!d)return;
+  const pay=activeDispatcherSettings();if(pay.mode!=='admin_balance')return alert('Сначала директор должен выбрать тип оплаты «Пополнить через админку».');
+  const amount=Number(prompt(direction==='plus'?'Сумма пополнения':'Сумма списания',String(pay.epPrice||500)));
+  if(!Number.isFinite(amount)||amount<=0)return;
+  const row=driverProfileRow(d),remote=await remoteProfilesByPhone(row.phone_digits).catch(()=>[]),current=remote.find(profile=>sameProfile(profile,d.id)),payload=mergeSubscriptionState(row.payload,profilePayload(current)),subscription={...(payload.subscription||{})};
+  const delta=direction==='plus'?amount:-amount,next=Number(subscription.balance||0)+delta;
+  if(next<0&&!confirm('Баланс станет отрицательным. Продолжить?'))return;
+  subscription.balance=next;
+  subscription.history=[{date:new Date().toISOString(),amount:delta,reason:direction==='plus'?'Пополнение через админку':'Списание через админку',balance:next},...profileHistoryFromPayload(payload)].slice(0,50);
+  payload.subscription=subscription;row.payload=payload;
+  const response=await fetch(API_BASE+'/driver_profiles?on_conflict=id',{method:'POST',headers:{...API_HEADERS,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)});
+  if(!response.ok)return alert('Не удалось обновить баланс. Проверьте интернет.');
+  d.balance=next;d.balanceHistory=subscription.history;store('taxichiProDrivers',drivers);
+  injectAdminBalanceButtons();
+  alert(`Баланс ${full(d)}: ${money(next)}`);
+}
+function injectAdminBalanceButtons(){
+  if(page!=='drivers'||activeDispatcherSettings().mode!=='admin_balance')return;
+  document.querySelectorAll('#rows tr').forEach((tr,i)=>{
+    if(tr.querySelector('.admin-balance-widget'))return;
+    const d=drivers[i];if(!d)return;
+    const actions=tr.querySelector('.driver-actions');if(!actions)return;
+    const box=document.createElement('div');box.className='admin-balance-widget';
+    box.innerHTML=`<span>Баланс: ${money(d.balance||0)}</span><button class="balance-plus" type="button">+</button><button class="balance-minus" type="button">−</button>`;
+    box.querySelector('.balance-plus').onclick=()=>adminAdjustDriverBalance(i,'plus');
+    box.querySelector('.balance-minus').onclick=()=>adminAdjustDriverBalance(i,'minus');
+    actions.prepend(box);
+  });
+}
+const baseRender=render;
+render=function(){baseRender();injectAdminBalanceButtons()}
+loadDispatchersRemote().then(()=>{syncDriverProfiles();render()});
