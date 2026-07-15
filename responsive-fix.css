@@ -7,7 +7,7 @@
 html{min-width:var(--taxichi-admin-width);overflow-x:auto;background:#f4f5f6}
 body{min-width:var(--taxichi-admin-width);overflow-x:auto}
 aside{width:var(--taxichi-sidebar-width)!important;padding:24px 18px!important}
-main{margin-left:var(--taxichi-sidebar-width)!important;width:calc(var(--taxichi-admin-width) - var(--taxichi-sidebar-width))!important;min-height:100vh;padding:34px 42px!important}
+main{margin-left:var(--taxichi-sidebar-width)!important;width:max(calc(100vw - var(--taxichi-sidebar-width)),calc(var(--taxichi-admin-width) - var(--taxichi-sidebar-width)))!important;min-height:100vh;padding:34px 42px!important}
 .brand span,.brand-copy,nav button,.user{font-size:inherit!important}
 .brand{margin-bottom:36px!important}
 nav button{display:flex!important;align-items:center;padding:13px 14px!important;border-radius:12px!important;font-size:15px!important}
@@ -22,8 +22,13 @@ h1{font-size:30px!important}
 table{min-width:1080px}
 th,td{padding:16px 18px!important}
 th:nth-child(3),td:nth-child(3){display:table-cell!important}
-.driver-actions{gap:7px!important}
+.driver-person{min-width:230px}
+.driver-cell{min-width:170px}
+.org-cell b{max-width:420px!important}
+.driver-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;flex-wrap:nowrap!important;min-width:360px}
 .driver-actions button,.driver-waybill,.open,.actions button{white-space:nowrap}
+.admin-balance-widget{flex:0 0 auto}
+.admin-balance-widget span{max-width:150px;overflow:hidden;text-overflow:ellipsis}
 .vehicle-docs{grid-template-columns:repeat(3,minmax(120px,1fr))!important}
 .form-grid{grid-template-columns:1fr 1fr!important}
 .details{grid-template-columns:1fr 1fr!important}
