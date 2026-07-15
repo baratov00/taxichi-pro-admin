@@ -3,24 +3,24 @@
   The cabinet keeps one predictable size on small laptops instead of shrinking
   cards, tables and the left menu into an oversized/uneven mobile layout.
 */
-:root{--taxichi-admin-width:1280px;--taxichi-sidebar-width:250px}
+:root{--taxichi-admin-width:1536px;--taxichi-sidebar-width:250px}
 html{min-width:var(--taxichi-admin-width);overflow-x:auto;background:#f4f5f6}
 body{min-width:var(--taxichi-admin-width);overflow-x:auto}
 aside{width:var(--taxichi-sidebar-width)!important;padding:24px 18px!important}
-main{margin-left:var(--taxichi-sidebar-width)!important;width:calc(var(--taxichi-admin-width) - var(--taxichi-sidebar-width))!important;min-height:100vh;padding:28px 34px!important}
+main{margin-left:var(--taxichi-sidebar-width)!important;width:calc(var(--taxichi-admin-width) - var(--taxichi-sidebar-width))!important;min-height:100vh;padding:34px 42px!important}
 .brand span,.brand-copy,nav button,.user{font-size:inherit!important}
-.brand{margin-bottom:30px!important}
-nav button{display:flex!important;align-items:center;padding:12px 13px!important;border-radius:12px!important;font-size:14px!important}
+.brand{margin-bottom:36px!important}
+nav button{display:flex!important;align-items:center;padding:13px 14px!important;border-radius:12px!important;font-size:15px!important}
 .user{display:grid!important}
 header{gap:18px}
-h1{font-size:28px!important}
-.stats{grid-template-columns:repeat(4,1fr)!important;gap:14px!important;margin:22px 0!important}
-.stats article{padding:17px!important}
-.stats strong{font-size:27px!important}
-.toolbar{padding:15px!important}
-.panel{border-radius:15px!important}
-table{min-width:960px}
-th,td{padding:13px 14px!important}
+h1{font-size:30px!important}
+.stats{grid-template-columns:repeat(4,1fr)!important;gap:16px!important;margin:28px 0!important}
+.stats article{padding:21px!important}
+.stats strong{font-size:30px!important}
+.toolbar{padding:18px!important}
+.panel{border-radius:17px!important}
+table{min-width:1080px}
+th,td{padding:16px 18px!important}
 th:nth-child(3),td:nth-child(3){display:table-cell!important}
 .driver-actions{gap:7px!important}
 .driver-actions button,.driver-waybill,.open,.actions button{white-space:nowrap}
@@ -30,6 +30,6 @@ th:nth-child(3),td:nth-child(3){display:table-cell!important}
 dialog{max-height:90vh;overflow:auto}
 .wide{width:min(900px,calc(100vw - 70px))}
 
-@media(max-width:1279px){
+@media(max-width:1535px){
   html,body{width:var(--taxichi-admin-width)}
 }
