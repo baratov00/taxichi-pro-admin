@@ -38,3 +38,39 @@ dialog{max-height:90vh;overflow:auto}
 @media(max-width:1535px){
   html,body{width:var(--taxichi-admin-width)}
 }
+
+@media(max-width:760px){
+  html,body{min-width:0!important;width:auto!important;overflow-x:hidden!important}
+  body{display:block!important}
+  aside{position:sticky!important;top:0!important;z-index:20!important;width:100%!important;height:auto!important;inset:auto!important;padding:10px 12px!important;display:block!important}
+  .brand{margin:0 0 10px!important;font-size:18px!important}
+  .brand img{width:36px!important;height:36px!important}
+  .brand-copy{display:grid!important}
+  aside nav{display:flex!important;gap:8px!important;overflow-x:auto!important;padding-bottom:4px!important}
+  nav button,.report-link{width:auto!important;min-width:48px!important;min-height:42px!important;flex:0 0 auto!important;padding:9px 11px!important;font-size:0!important;justify-content:center!important}
+  nav button .nav-icon,.report-link .nav-icon{margin-right:0!important}
+  .user{display:none!important}
+  main{margin-left:0!important;width:100%!important;min-height:auto!important;padding:18px 12px 26px!important}
+  header{display:grid!important;gap:14px!important;align-items:start!important}
+  h1{font-size:25px!important;line-height:1.1!important}
+  .header-actions{display:flex!important;gap:8px!important;flex-wrap:wrap!important}
+  #addDriver{width:100%!important;min-height:44px!important}
+  .badge{display:none!important}
+  .stats{grid-template-columns:1fr 1fr!important;gap:10px!important;margin:16px 0!important}
+  .stats article{padding:14px!important;border-radius:12px!important}
+  .stats strong{font-size:23px!important}
+  .toolbar{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;padding:12px!important}
+  .panel{border-radius:12px!important;overflow:auto!important}
+  table{min-width:760px!important}
+  th,td{padding:12px!important}
+  .driver-actions{min-width:0!important;flex-wrap:wrap!important;justify-content:stretch!important}
+  .driver-actions button,.driver-waybill{width:100%!important;justify-content:center!important}
+  .admin-balance-widget{width:100%!important;justify-content:space-between!important;border-radius:14px!important}
+  .admin-balance-widget span{max-width:none!important}
+  dialog,.wide,#staffDialog{width:calc(100vw - 18px)!important;max-width:none!important;max-height:calc(100dvh - 18px)!important;padding:18px!important;border-radius:14px!important}
+  dialog .close{position:sticky!important;top:0!important;float:none!important;margin-left:auto!important;display:block!important;z-index:2!important}
+  .form-grid,.staff-section .form-grid,.settings-grid,.settings-grid.support-only,.schedule-driver,.details{grid-template-columns:1fr!important}
+  .actions,.edit-actions{display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
+  .edit-actions .action-spacer{display:none!important}
+  .actions button,.danger-delete{width:100%!important}
+}
