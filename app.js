@@ -6,7 +6,7 @@ const driverSeed={phone:'+7 (993) 353-25-69',password:'4829',lastName:'Бара�
 const vehicleSeed={id:'veh-1',car:'KIA RIO',plate:'В148РВ799',year:'2021',color:'Белый',organizationId:'org-1',driverId:'driver-1',diagnosticFrom:'2026-03-18',diagnostic:'2027-03-18',osagoNumber:'XXX1234567890',osagoFrom:'2025-11-26',osago:'2026-11-26',osgopNumber:'XXX0598830871',osgopFrom:'2025-08-14',osgop:'2026-08-14',taxiPermitNumber:'77-123456',taxiPermitUrl:'https://fgis-taxi.ru/'};
 const waybillSeed=[{id:'1',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:125430,date:'2026-07-05T08:42',status:'Открыто'},{id:'2',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:124988,date:'2026-07-04T07:55',status:'Закрыто'},{id:'3',driver:'Иванов Сергей Петрович',plate:'А482КТ77',car:'ŠKODA RAPID',odometer:98212,date:'2026-07-03T08:10',status:'Закрыто'}];
 const ADMIN_QUERY_ID=new URLSearchParams(location.search).get('admin');
-if(ADMIN_QUERY_ID)sessionStorage.setItem('taxichiDispatcherSession',ADMIN_QUERY_ID);
+if(ADMIN_QUERY_ID&&sessionStorage.getItem('taxichiDispatcherSession')===ADMIN_QUERY_ID)localStorage.setItem('taxichiDispatcherLastAdmin',ADMIN_QUERY_ID);
 const ACTIVE_ADMIN_ID=ADMIN_QUERY_ID||sessionStorage.getItem('taxichiDispatcherSession')||'demo',ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
 function storageKey(key){return ADMIN_DATA_KEYS.has(key)?`taxichiProAdmin:${ACTIVE_ADMIN_ID}:${key}`:key}
 function load(key,fallback){try{const raw=localStorage.getItem(storageKey(key)),legacy=ACTIVE_ADMIN_ID==='demo'?localStorage.getItem(key):null;return JSON.parse((raw??legacy)??'null')??fallback}catch{return fallback}}
@@ -71,15 +71,17 @@ $('.vehicle-close').onclick=$('.vehicle-cancel').onclick=()=>$('#vehicleDialog')
 const driverForm=$('#driverForm'),snils=driverForm.elements.snils;snils.placeholder='Например: 000-000-000 00';snils.inputMode='numeric';snils.addEventListener('input',e=>{const n=e.target.value.replace(/\D/g,'').slice(0,11);e.target.value=n.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2}).*/,(_,a,b,c,d)=>a+(b?'-'+b:'')+(c?'-'+c:'')+(d?' '+d:''))});
 async function submitDriverForm(e){e.preventDefault();const submit=e.submitter;if(submit)submit.disabled=true;try{const d=applyFullName(Object.fromEntries(new FormData(e.target))),selectedVehicle=byId(vehicles,d.vehicleId),currentId=editing>=0?(drivers[editing].id||`driver-${editing+1}`):'',oldVehicleId=editing>=0?drivers[editing].vehicleId:'';if(selectedVehicle)applyVehicleToDriver(d,selectedVehicle);else clearDriverVehicle(d);if(localDriverDuplicate(d,currentId)){alert('Такой водитель уже есть в этом админском кабинете. Проверьте телефон, ВУ или ФИО.');return}const conflict=await driverAccountConflict(d.phone,currentId),profileCheckFailed=!!conflict.checkFailed;if(conflict.exists){alert('Аккаунт с таким номером уже существует. Этот водитель уже добавлен в другой админский кабинет.');return}const dispatcherId=sessionStorage.getItem('taxichiDispatcherSession')||'demo';if(editing<0){d.id='driver-'+Date.now();d.dispatcherId=dispatcherId;drivers.push(d)}else{d.id=currentId;d.dispatcherId=drivers[editing].dispatcherId||dispatcherId;drivers[editing]=d}if(selectedVehicle)vehicles.forEach(v=>{if(v.driverId===d.id&&v.id!==selectedVehicle.id)v.driverId=''});if(oldVehicleId&&(!selectedVehicle||oldVehicleId!==selectedVehicle.id)){const old=byId(vehicles,oldVehicleId);if(old&&old.driverId===d.id)old.driverId=''}if(selectedVehicle)selectedVehicle.driverId=d.id;save();const profileSynced=await syncDriverProfile(d);clearDraft('driver');refreshActiveWaybillMeta();$('#driverDialog').close();page='drivers';render();if(!profileSynced)alert(profileCheckFailed?'Водитель сохранён в админке, но общая база приложения сейчас не отвечает. Проверьте интернет и нажмите «Сохранить водителя» ещё раз, чтобы вход в приложение обновился.':'Водитель сохранён в админке, но профиль приложения не обновился. Проверьте интернет и попробуйте сохранить водителя ещё раз.')}finally{if(submit)submit.disabled=false}}
 $('#driverForm').onsubmit=submitDriverForm;
-const loginScreen=$('#loginScreen'),loginForm=$('#loginForm'),DISPATCHERS_TABLE='taxichi_pro_dispatchers',DEFAULT_DISPATCHERS=[{id:'demo',name:'Иванова Мария',phone:'+7 999 999-77-42',login:'admin',password:'1234',active:true}];
-let dispatcherCache=(load('taxichiProDispatchers',[])||DEFAULT_DISPATCHERS).map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false}));
-function dispatcherAccounts(){const list=dispatcherCache.length?dispatcherCache:DEFAULT_DISPATCHERS;return list.map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false})).filter(d=>d.active)}
-async function loadDispatchersRemote(){try{const response=await fetch(`${API_BASE}/${DISPATCHERS_TABLE}?select=*&order=created_at.asc`,{headers:API_HEADERS,cache:'no-store'});if(!response.ok)throw new Error(await response.text());const remote=await response.json();if(remote.length){dispatcherCache=remote.map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false}));localStorage.setItem('taxichiProDispatchers',JSON.stringify(dispatcherCache))}}catch(error){console.warn('Не удалось загрузить админов из Supabase',error)}return dispatcherAccounts()}
+const loginScreen=$('#loginScreen'),loginForm=$('#loginForm'),DISPATCHERS_TABLE='taxichi_pro_dispatchers',DEFAULT_DISPATCHERS=[];
+const isRemovedDemoDispatcher=d=>String(d?.id||'')==='demo'||String(d?.name||'')==='Иванова Мария'||String(d?.login||'')==='admin';
+let dispatcherCache=((load('taxichiProDispatchers',[])||DEFAULT_DISPATCHERS).filter(d=>!isRemovedDemoDispatcher(d))).map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false}));
+function dispatcherAccounts(){const list=dispatcherCache.length?dispatcherCache:DEFAULT_DISPATCHERS;return list.filter(d=>!isRemovedDemoDispatcher(d)).map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false})).filter(d=>d.active)}
+async function loadDispatchersRemote(){try{const response=await fetch(`${API_BASE}/${DISPATCHERS_TABLE}?select=*&order=created_at.asc`,{headers:API_HEADERS,cache:'no-store'});if(!response.ok)throw new Error(await response.text());const remote=(await response.json()).filter(d=>!isRemovedDemoDispatcher(d));dispatcherCache=remote.map((d,i)=>({...d,id:d.id||`disp-${i+1}`,active:d.active!==false}));localStorage.setItem('taxichiProDispatchers',JSON.stringify(dispatcherCache))}catch(error){console.warn('Не удалось загрузить админов из Supabase',error)}return dispatcherAccounts()}
 function dispatcherLoginMatch(account,login){const value=String(login||'').trim();return account.login===value||(phoneDigits(value)&&phoneDigits(account.phone)===phoneDigits(value))}
-function enterDispatcher(account){const nextId=account.id||'demo';sessionStorage.setItem('taxichiDispatcherSession',nextId);if(ACTIVE_ADMIN_ID!==nextId){location.href=`${location.pathname}?admin=${encodeURIComponent(nextId)}`;return}loginScreen.classList.add('hidden');$('#roleName').textContent='Админ';$('.user small').textContent=account.name||account.login}
-loginForm.onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target)),account=(await loadDispatchersRemote()).find(x=>dispatcherLoginMatch(x,data.login)&&x.password===data.password);if(account){$('#loginError').textContent='';enterDispatcher(account)}else $('#loginError').textContent='Если забыли пароль для входа, обращайтесь к директору, который дал вам доступ.'};
-loadDispatchersRemote().then(accounts=>{const savedId=sessionStorage.getItem('taxichiDispatcherSession')||ACTIVE_ADMIN_ID,savedAccount=accounts.find(x=>x.id===savedId);if(savedAccount)enterDispatcher(savedAccount);else sessionStorage.removeItem('taxichiDispatcherSession')});
-const logoutButton=document.createElement('button');logoutButton.className='logout-access';logoutButton.textContent='Выйти из кабинета';logoutButton.onclick=()=>{sessionStorage.removeItem('taxichiDispatcherSession');location.href=location.pathname};$('.user').append(logoutButton);
+function rememberedDispatcherId(){return localStorage.getItem('taxichiDispatcherRemember')||''}
+function enterDispatcher(account,remember=false){const nextId=account.id||'demo';sessionStorage.setItem('taxichiDispatcherSession',nextId);localStorage.setItem('taxichiDispatcherLastAdmin',nextId);if(remember)localStorage.setItem('taxichiDispatcherRemember',nextId);if(ACTIVE_ADMIN_ID!==nextId){location.href=`${location.pathname}?admin=${encodeURIComponent(nextId)}`;return}loginScreen.classList.add('hidden');$('#roleName').textContent='Админ';$('.user small').textContent=account.name||account.login}
+loginForm.onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target)),account=(await loadDispatchersRemote()).find(x=>dispatcherLoginMatch(x,data.login)&&x.password===data.password);if(account){$('#loginError').textContent='';enterDispatcher(account,!!data.remember)}else $('#loginError').textContent='Если забыли пароль для входа, обращайтесь к директору, который дал вам доступ.'};
+loadDispatchersRemote().then(accounts=>{const savedId=sessionStorage.getItem('taxichiDispatcherSession')||rememberedDispatcherId(),savedAccount=savedId?accounts.find(x=>x.id===savedId):null;if(savedAccount)enterDispatcher(savedAccount,!!rememberedDispatcherId());else{sessionStorage.removeItem('taxichiDispatcherSession');localStorage.removeItem('taxichiDispatcherRemember')}});
+const logoutButton=document.createElement('button');logoutButton.className='logout-access';logoutButton.textContent='Выйти из кабинета';logoutButton.onclick=()=>{sessionStorage.removeItem('taxichiDispatcherSession');localStorage.removeItem('taxichiDispatcherRemember');location.href=location.pathname};$('.user').append(logoutButton);
 const card=$('#card');$('#card .close').onclick=()=>card.close();$('.approve').onclick=()=>card.close();$('.reject').onclick=()=>card.close();$('#search').oninput=applyTableFilters;render();syncWaybills();syncDriverProfiles();
 
 // Admin-balance mode from director cabinet.
@@ -155,3 +157,79 @@ function injectAdminBalanceButtons(){
 const baseRender=render;
 render=function(){baseRender();injectAdminBalanceButtons()}
 loadDispatchersRemote().then(()=>{syncDriverProfiles();render()});
+
+function balanceHistoryLast7Days(items){
+  const cutoff=Date.now()-7*24*60*60*1000;
+  return (Array.isArray(items)?items:[]).filter(item=>{const time=Date.parse(item?.date||'');return !Number.isFinite(time)||time>=cutoff});
+}
+function requestBalanceAmount(d,direction,suggested){
+  return new Promise(resolve=>{
+    let dialog=document.querySelector('#balanceAdjustDialog');
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='balanceAdjustDialog';dialog.className='balance-adjust-dialog';document.body.append(dialog)}
+    const plus=direction==='plus',current=Number(d.balance||0);
+    dialog.innerHTML=`<form method="dialog" class="balance-adjust-form"><button class="balance-dialog-close" value="cancel" aria-label="Закрыть">×</button><div class="balance-dialog-icon ${plus?'is-plus':'is-minus'}">${plus?'+':'−'}</div><div><small>${plus?'ПОПОЛНЕНИЕ':'СПИСАНИЕ'} БАЛАНСА</small><h2>${full(d)}</h2><p>${d.phone||'Телефон не указан'}</p></div><div class="balance-dialog-current"><span>Текущий баланс</span><strong>${money(current)}</strong></div><label>Введите сумму, ₽<input name="amount" inputmode="decimal" type="number" min="1" step="1" value="${Number(suggested||500)}" required autofocus></label><div class="balance-dialog-preview">Новый баланс: <b>${money(plus?current+Number(suggested||500):current-Number(suggested||500))}</b></div><div class="balance-dialog-actions"><button value="cancel" class="balance-cancel">Отмена</button><button value="confirm" class="balance-confirm ${plus?'is-plus':'is-minus'}">${plus?'Пополнить баланс':'Списать с баланса'}</button></div></form>`;
+    const input=dialog.querySelector('input'),preview=dialog.querySelector('.balance-dialog-preview b');
+    input.oninput=()=>{const amount=Number(input.value||0);preview.textContent=money(plus?current+amount:current-amount)};
+    dialog.onclose=()=>{const amount=Number(input.value);resolve(dialog.returnValue==='confirm'&&Number.isFinite(amount)&&amount>0?amount:null)};
+    dialog.showModal();setTimeout(()=>input.select(),50);
+  });
+}
+adminAdjustDriverBalance=async function(driverIndex,direction){
+  const d=drivers[driverIndex];if(!d)return;
+  const pay=activeDispatcherSettings();if(pay.mode!=='admin_balance')return alert('Сначала директор должен выбрать тип оплаты «Пополнить через админку».');
+  const amount=await requestBalanceAmount(d,direction,pay.epPrice||500);if(amount===null)return;
+  const row=driverProfileRow(d),remote=await remoteProfilesByPhone(row.phone_digits).catch(()=>[]),current=remote.find(profile=>sameProfile(profile,d.id)),payload=mergeSubscriptionState(row.payload,profilePayload(current)),subscription={...(payload.subscription||{})};
+  const delta=direction==='plus'?amount:-amount,next=Number(subscription.balance||0)+delta;
+  if(next<0&&!confirm('После списания баланс станет отрицательным. Продолжить?'))return;
+  subscription.balance=next;subscription.history=[{date:new Date().toISOString(),amount:delta,reason:direction==='plus'?'Пополнение через админку':'Списание через админку',balance:next},...balanceHistoryLast7Days(profileHistoryFromPayload(payload))].slice(0,50);payload.subscription=subscription;row.payload=payload;
+  const response=await fetch(API_BASE+'/driver_profiles?on_conflict=id',{method:'POST',headers:{...API_HEADERS,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)});
+  if(!response.ok)return alert('Не удалось обновить баланс. Проверьте интернет и повторите попытку.');
+  d.balance=next;d.balanceHistory=subscription.history;store('taxichiProDrivers',drivers);render();
+};
+
+const tablePageSize=20,tablePageBySection={};
+function applyTablePagination(){
+  const excluded=['settings'];if(excluded.includes(page))return document.querySelector('#tablePagination')?.remove();
+  const all=[...rows.querySelectorAll('tr')],eligible=all.filter(row=>row.style.display!=='none'),total=Math.max(1,Math.ceil(eligible.length/tablePageSize));
+  let current=Math.min(Math.max(1,tablePageBySection[page]||1),total);tablePageBySection[page]=current;
+  eligible.forEach((row,index)=>row.style.display=index>=(current-1)*tablePageSize&&index<current*tablePageSize?'':'none');
+  let nav=document.querySelector('#tablePagination');if(!nav){nav=document.createElement('nav');nav.id='tablePagination';nav.className='table-pagination';document.querySelector('.panel')?.after(nav)}
+  if(eligible.length<=tablePageSize){nav.remove();return}
+  const pages=[];for(let i=1;i<=total;i++){if(i===1||i===total||Math.abs(i-current)<=2)pages.push(i);else if(pages[pages.length-1]!=='…')pages.push('…')}
+  nav.innerHTML=`<span>Показано ${(current-1)*tablePageSize+1}–${Math.min(current*tablePageSize,eligible.length)} из ${eligible.length}</span><div><button ${current===1?'disabled':''} data-page="${current-1}">‹</button>${pages.map(p=>p==='…'?'<i>…</i>':`<button class="${p===current?'active':''}" data-page="${p}">${p}</button>`).join('')}<button ${current===total?'disabled':''} data-page="${current+1}">›</button></div>`;
+  nav.querySelectorAll('button[data-page]').forEach(button=>button.onclick=()=>{tablePageBySection[page]=Number(button.dataset.page);baseApplyTableFiltersForPaging();applyTablePagination();document.querySelector('.panel')?.scrollIntoView({behavior:'smooth',block:'start'})});
+}
+const baseApplyTableFiltersForPaging=applyTableFilters;
+applyTableFilters=function(){tablePageBySection[page]=1;baseApplyTableFiltersForPaging();applyTablePagination()};
+const renderWithBalanceDialog=render;
+render=function(){renderWithBalanceDialog();setTimeout(()=>{baseApplyTableFiltersForPaging();applyTablePagination()},0)};
+
+let balanceRefreshBusy=false,balanceRefreshTimer=0;
+async function refreshDriverBalancesFromCloud(){
+  if(balanceRefreshBusy||page!=='drivers'||activeDispatcherSettings().mode!=='admin_balance')return;
+  balanceRefreshBusy=true;
+  let changed=false;
+  try{
+    await Promise.all(drivers.map(async d=>{
+      const digits=phoneDigits(d.phone);if(!digits)return;
+      const remote=await remoteProfilesByPhone(digits).catch(()=>[]);
+      const current=remote.find(profile=>sameProfile(profile,d.id))||remote[0];
+      const payload=profilePayload(current),subscription=payload.subscription||{};
+      if(subscription.paymentMode&&subscription.paymentMode!=='admin_balance')return;
+      const nextBalance=Number(subscription.balance??d.balance??0);
+      const nextHistory=balanceHistoryLast7Days(Array.isArray(subscription.history)?subscription.history:[]);
+      if(Number(d.balance||0)!==nextBalance||JSON.stringify(d.balanceHistory||[])!==JSON.stringify(nextHistory)){
+        d.balance=nextBalance;d.balanceHistory=nextHistory;changed=true;
+      }
+    }));
+    if(changed){store('taxichiProDrivers',drivers);renderWithBalanceDialog();setTimeout(()=>{baseApplyTableFiltersForPaging();applyTablePagination()},0)}
+  }finally{balanceRefreshBusy=false}
+}
+function scheduleBalanceRefresh(){
+  if(page!=='drivers'||activeDispatcherSettings().mode!=='admin_balance')return;
+  clearTimeout(balanceRefreshTimer);
+  balanceRefreshTimer=setTimeout(refreshDriverBalancesFromCloud,250);
+}
+const renderWithCloudBalances=render;
+render=function(){renderWithCloudBalances();scheduleBalanceRefresh()};
+setInterval(scheduleBalanceRefresh,15000);
