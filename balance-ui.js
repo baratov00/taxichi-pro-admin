@@ -1,7 +1,8 @@
 // Cloud balance UI + automatic EP waybill debit.
 (function(){
-  const VERSION='20260719-2';
+  const VERSION='20260719-3';
   const DAY=24*60*60*1000;
+  const WAYBILL_GRACE=2*60*60*1000;
   const STARTED_AT=Date.now();
 
   window.taxichiBalanceUiVersion=VERSION;
@@ -224,18 +225,18 @@
     return {driver,meta};
   }
 
-  function shouldDebitWaybill(w,meta){
+  function shouldDebitWaybill(w,meta,options={}){
     if(!w||String(w.openedBy||'').startsWith('profile;'))return false;
     if(typeof waybillAdminId==='function'&&waybillAdminId(w)!==ACTIVE_ADMIN_ID)return false;
     const time=Date.parse(w.date||'');
-    if(Number.isFinite(time)&&time<STARTED_AT-2*60*1000)return false;
+    if(!options.force&&Number.isFinite(time)&&time<STARTED_AT-WAYBILL_GRACE)return false;
     const mode=meta?.subscription?.paymentMode||activeDispatcherSettings().mode;
     return mode==='admin_balance';
   }
 
-  async function debitWaybillBalance(w){
+  async function debitWaybillBalance(w,options={}){
     const {driver:d,meta}=findDriverForWaybill(w);
-    if(!d||!shouldDebitWaybill(w,meta))return false;
+    if(!d||!shouldDebitWaybill(w,meta,options))return false;
 
     const pay=activeDispatcherSettings();
     const amount=Number(meta?.subscription?.epPrice||pay.epPrice||0);
@@ -251,6 +252,11 @@
 
     const currentBalance=Number(subscription.balance||0);
     const next=currentBalance-amount;
+    if(next<0){
+      alert(`Недостаточно баланса для выпуска ЭПЛ. Нужно ${money(amount)}, доступно ${money(currentBalance)}. Обратитесь в парк.`);
+      return false;
+    }
+
     subscription.balance=next;
     subscription.history=balanceHistoryLast7Days([
       {
@@ -273,6 +279,47 @@
     store('taxichiProDrivers',drivers);
     if(typeof window.taxichiCloudSaveNow==='function')window.taxichiCloudSaveNow();
     return true;
+  }
+
+  window.taxichiDebitWaybillBalance=function(w){
+    return debitWaybillBalance(w,{force:true});
+  };
+
+  function showBalanceHistory(d){
+    let dialog=document.querySelector('#balanceHistoryDialog');
+    if(!dialog){
+      dialog=document.createElement('dialog');
+      dialog.id='balanceHistoryDialog';
+      dialog.className='balance-adjust-dialog balance-history-dialog';
+      document.body.append(dialog);
+    }
+    const history=balanceHistoryLast7Days(d.balanceHistory||[]);
+    dialog.innerHTML=`<div class="balance-adjust-form">
+      <button class="balance-dialog-close" type="button" aria-label="Закрыть">×</button>
+      <div class="balance-dialog-icon is-plus">₽</div>
+      <div><small>ИСТОРИЯ БАЛАНСА</small><h2>${full(d)}</h2><p>Доступный баланс: ${money(d.balance||0)}</p></div>
+      <div class="balance-history-list">${history.length?history.map(item=>`<article>
+        <div><b class="${Number(item.amount||0)<0?'minus':'plus'}">${Number(item.amount||0)>0?'+':''}${money(item.amount||0)}</b><span>${item.reason||'Операция баланса'}</span></div>
+        <small>${item.date?new Date(item.date).toLocaleString('ru-RU'):'—'} · баланс ${money(item.balance||0)}</small>
+      </article>`).join(''):'<p class="dialog-note">За последние 7 дней операций нет.</p>'}</div>
+      <div class="balance-dialog-actions"><button class="balance-cancel" type="button">Закрыть</button></div>
+    </div>`;
+    dialog.querySelector('.balance-dialog-close').onclick=()=>dialog.close();
+    dialog.querySelector('.balance-cancel').onclick=()=>dialog.close();
+    dialog.showModal();
+  }
+
+  function enhanceBalanceWidgets(){
+    if(page!=='drivers'||activeDispatcherSettings().mode!=='admin_balance')return;
+    document.querySelectorAll('#rows tr').forEach((row,i)=>{
+      const span=row.querySelector('.admin-balance-widget span');
+      const d=drivers[i];
+      if(!span||!d||span.dataset.historyBound==='1')return;
+      span.dataset.historyBound='1';
+      span.style.cursor='pointer';
+      span.title='Показать историю баланса';
+      span.onclick=()=>showBalanceHistory(d);
+    });
   }
 
   const processingWaybillDebits=new Set();
@@ -326,8 +373,26 @@
   const renderBeforeCloudBalance=render;
   render=function(){
     renderBeforeCloudBalance();
+    enhanceBalanceWidgets();
     scheduleBalanceRefresh();
   };
+
+  if(typeof remoteOpenDriver==='function'){
+    const originalRemoteOpenDriver=remoteOpenDriver;
+    remoteOpenDriver=async function(i){
+      const before=new Set((Array.isArray(waybills)?waybills:[]).map(w=>String(w.id)));
+      await originalRemoteOpenDriver(i);
+      const created=(Array.isArray(waybills)?waybills:[]).find(w=>w&&w.status==='Открыто'&&!before.has(String(w.id)));
+      if(created){
+        try{
+          if(await debitWaybillBalance(created,{force:true}))render();
+        }catch(error){
+          console.warn('immediate waybill balance debit failed',created?.id,error);
+          alert('ЭПЛ открыт, но баланс не списался. Проверьте интернет и обновите страницу админки.');
+        }
+      }
+    };
+  }
 
   setInterval(scheduleBalanceRefresh,15000);
 })();
