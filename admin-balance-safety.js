@@ -3,6 +3,7 @@
   const DAY=24*60*60*1000;
 
   function ready(){
+    if(window.taxichiBalanceUiVersion)return false;
     return typeof activeDispatcherSettings==='function'
       && typeof remoteProfilesByPhone==='function'
       && typeof driverProfileRow==='function'
