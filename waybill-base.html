@@ -55,6 +55,8 @@
     .qr i{display:block;background:#fff}
     .qr i.on{background:#111}
     .qr img{width:100%;height:100%;display:block;mix-blend-mode:multiply}
+    body.app-view{background:#fff;overflow:hidden}
+    body.app-view .sheet{width:100vw;min-height:100vh;margin:0 auto;box-shadow:none}
     .footer{text-align:center;font-size:14px;font-weight:800;margin-top:18px}
     .actions{text-align:center;margin:12px}
     .actions button{background:#ffd21c;border:0;padding:12px 20px;font-weight:bold;border-radius:8px}
@@ -156,12 +158,15 @@
 
   <script>
     const q=new URLSearchParams(location.search);
+    if(q.get('app')==='driver')document.body.classList.add('app-view');
     const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
     const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
     const ACTIVE_ADMIN_ID=q.get('admin')||sessionStorage.getItem('taxichiDispatcherSession')||'demo';
     const ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
     const storageKey=key=>ADMIN_DATA_KEYS.has(key)?`taxichiProAdmin:${ACTIVE_ADMIN_ID}:${key}`:key;
     const readLocal=(key,fallback)=>{try{const raw=localStorage.getItem(storageKey(key)),legacy=ACTIVE_ADMIN_ID==='demo'?localStorage.getItem(key):null;return JSON.parse((raw??legacy)??'null')??fallback}catch{return fallback}};
+    const parseOpenMeta=value=>{const meta={};String(value||'').split(';').forEach(part=>{const [key,...rest]=part.split('=');if(key&&rest.length)meta[key.trim()]=rest.join('=').trim()});return meta};
+    const parseOpenData=value=>{const raw=parseOpenMeta(value).data;if(!raw)return {};try{return JSON.parse(decodeURIComponent(raw))}catch{return {}}};
     async function loadRemoteWaybill(id){
       if(!id)return null;
       try{
@@ -177,15 +182,16 @@
     (async()=>{
     const remote=await loadRemoteWaybill(q.get('id'));
     if(remote)w=remote;
+    const payload=parseOpenData(w.openedBy||w.opened_by||'');
     const vs=readLocal('taxichiProVehicles',[]);
-    const v=vs.find(x=>x.plate===w.plate)||{};
+    const v=Object.assign({},payload.vehicle||{},vs.find(x=>x.plate===w.plate)||{});
     const ds=readLocal('taxichiProDrivers',[]);
-    const d=ds.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{license:'МКК413031000885666',licenseFrom:'2023-01-12',licenseUntil:'2033-01-12',kisArt:'0000597358',phone:'+79933532569',snils:'213-055-002 94',inn:'775135449026'};
+    const d=Object.assign({license:'МКК413031000885666',licenseFrom:'2023-01-12',licenseUntil:'2033-01-12',kisArt:'0000597358',phone:'+79933532569',snils:'213-055-002 94',inn:'775135449026'},payload.driver||{},ds.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{});
     const os=readLocal('taxichiProOrganizations',[]);
-    const o=os.find(x=>x.id===(v.organizationId||d.organizationId))||{legalForm:'ИП',name:'Шиндина Анастасия Вадимовна',address:'г. Москва',ogrn:'321774600123456',inn:'772796701039',phone:'+79153955383'};
+    const o=Object.assign({legalForm:'ИП',name:'Шиндина Анастасия Вадимовна',address:'г. Москва',ogrn:'321774600123456',inn:'772796701039',phone:'+79153955383'},payload.organization||{},os.find(x=>x.id===(v.organizationId||d.organizationId))||{});
     const ss=readLocal('taxichiProStaff',[]);
-    const m=ss.find(x=>x.id===o.medicId)||{lastName:'Соколова',firstName:'Елена',middleName:'Игоревна'};
-    const k=ss.find(x=>x.id===o.mechanicId)||{lastName:'Петров',firstName:'Алексей',middleName:'Викторович'};
+    const m=Object.assign({lastName:'Соколова',firstName:'Елена',middleName:'Игоревна'},payload.medic||{},ss.find(x=>x.id===o.medicId)||{});
+    const k=Object.assign({lastName:'Петров',firstName:'Алексей',middleName:'Викторович'},payload.mechanic||{},ss.find(x=>x.id===o.mechanicId)||{});
     const exit=new Date(w.date);
     const dt=new Date(exit.getTime()-10*60*1000);
     const medTech=new Date(exit.getTime()-15*60*1000);
@@ -241,8 +247,10 @@
       txt('postTechDate',date(postTech));
       txt('postTechTime',time(postTech));
     }
-    txt('returnDate',date(returned));
-    txt('returnTime',time(returned));
+    if(closedAt){
+      txt('returnDate',date(returned));
+      txt('returnTime',time(returned));
+    }
     txt('endDate',date(end));
     txt('endTime',time(end));
     txt('odo',Number(w.odometer).toLocaleString('ru-RU'));

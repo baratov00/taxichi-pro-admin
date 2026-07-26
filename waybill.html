@@ -33,6 +33,11 @@
     .line{stroke:#111;stroke-width:1.2;fill:none}
     .stampBox{stroke:#394ee8;stroke-width:1.5;fill:none}
     .sig{stroke:#263a9b;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none;opacity:.96}
+    body.app-view{background:#fff}
+    body.app-view .actions{display:none}
+    body.app-view .sheet{width:100vw;height:auto;margin:0 auto;background:#fff;display:flex;justify-content:center;align-items:flex-start;overflow:visible}
+    body.app-view .page{transform:scale(var(--app-scale,1));transform-origin:top center}
+    body.app-view .draw{transform:translate(36px,18px) scale(.94) translate(-36px,-36px)}
     @page{size:A4;margin:0}
     @media print{body{background:#fff}.actions{display:none}.sheet{margin:0}}
   </style>
@@ -44,6 +49,7 @@
   </main>
   <script>
     const q=new URLSearchParams(location.search);
+    if(q.get('app')==='driver'){document.body.classList.add('app-view');const fit=()=>document.documentElement.style.setProperty('--app-scale',String(Math.min(window.innerWidth/595,1.18)));fit();addEventListener('resize',fit)}
     const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
     const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
     const ACTIVE_ADMIN_ID=q.get('admin')||sessionStorage.getItem('taxichiDispatcherSession')||'demo';
@@ -115,6 +121,11 @@
         if(key&&rest.length)meta[key.trim()]=rest.join('=').trim();
       });
       return meta;
+    };
+    const parseOpenData=value=>{
+      const raw=parseOpenMeta(value).data;
+      if(!raw)return {};
+      try{return JSON.parse(decodeURIComponent(raw))}catch{return {}}
     };
     const scheduleLeadForDriver=d=>{
       try{
@@ -209,15 +220,16 @@
       let w=localWaybills.find(x=>String(x.id)===id)||seedW;
       const remote=await loadRemoteWaybill(id);
       if(remote)w=remote;
+      const payload=parseOpenData(w.openedBy||w.opened_by||'');
       const drivers=readLocal('taxichiProDrivers',[]);
       const vehicles=readLocal('taxichiProVehicles',[]);
       const orgs=readLocal('taxichiProOrganizations',[]);
       const staff=readLocal('taxichiProStaff',[]);
-      const v=vehicles.find(x=>x.plate===w.plate)||{};
-      const d=Object.assign({},defaultDriver,drivers.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{});
-      const o=Object.assign({},defaultOrg,orgs.find(x=>x.id===(v.organizationId||d.organizationId))||{});
-      const medic=staff.find(x=>x.id===o.medicId)||defaultMedic;
-      const mechanic=staff.find(x=>x.id===o.mechanicId)||defaultMechanic;
+      const v=Object.assign({},payload.vehicle||{},vehicles.find(x=>x.plate===w.plate)||{});
+      const d=Object.assign({},defaultDriver,payload.driver||{},drivers.find(x=>x.plate===w.plate||x.vehicleId===v.id||x.id===v.driverId)||{});
+      const o=Object.assign({},defaultOrg,payload.organization||{},orgs.find(x=>x.id===(v.organizationId||d.organizationId))||{});
+      const medic=Object.assign({},defaultMedic,payload.medic||{},staff.find(x=>x.id===o.medicId)||{});
+      const mechanic=Object.assign({},defaultMechanic,payload.mechanic||{},staff.find(x=>x.id===o.mechanicId)||{});
       const dt=new Date(w.date||Date.now());
       const meta=parseOpenMeta(w.openedBy||w.opened_by||'');
       const leadMinutes=Number(meta.lead??scheduleLeadForDriver(d));
@@ -333,8 +345,10 @@
       txt('Возвращение на парковку',46,757,'bold');
       txt('Окончание смены',46,784,'bold');
       txt('Показание одометра, км',46,810,'bold');
-      center(formatDate(returned),218,740,62,26,'bold');
-      center(formatTime(returned),280,740,62,26,'bold');
+      if(closedAt){
+        center(formatDate(returned),218,740,62,26,'bold');
+        center(formatTime(returned),280,740,62,26,'bold');
+      }
       center(formatDate(end),218,766,62,27,'bold');
       center(formatTime(end),280,766,62,27,'bold');
       let qrNonce=0;
