@@ -168,7 +168,7 @@
       txt('КВАЛИФИЦИРОВАННОЙ ЭЛЕКТРОННОЙ ПОДПИСЬЮ',451,y+27,'stamp','middle');
       txtFit(`Сертификат: ${cert}`,356,y+36,190,'stamp');
       txt(`Владелец: ${shortText(cleanPlus(name))}`,451,y+45,'stamp','middle');
-      txtFit(`${from} - ${until}`,356,y+54,190,'stamp');
+      txtFit(`Действителен: с ${from} по ${until}`,356,y+54,190,'stamp');
     }
     function bigRow(y,labelLines,person,dt){
       rect(36,y,522,64);
