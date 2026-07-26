@@ -235,10 +235,12 @@
     txt('shiftStartTime',time(dt));
     txt('parkingExitDate',date(exit));
     txt('parkingExitTime',time(exit));
-    txt('postMedDate',date(postMed));
-    txt('postMedTime',time(postMed));
-    txt('postTechDate',date(postTech));
-    txt('postTechTime',time(postTech));
+    if(closedAt){
+      txt('postMedDate',date(postMed));
+      txt('postMedTime',time(postMed));
+      txt('postTechDate',date(postTech));
+      txt('postTechTime',time(postTech));
+    }
     txt('returnDate',date(returned));
     txt('returnTime',time(returned));
     txt('endDate',date(end));
@@ -266,7 +268,9 @@
       qr.innerHTML='';
       const img=document.createElement('img');
       img.alt='QR-код ФГИС';
-      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=${nonce%2}&color=${nonce%2?'111111':'000000'}&data=${encodeURIComponent(value)}`;
+      img.style.transformOrigin='center';
+      img.style.transform=`rotate(${nonce%2?90:0}deg)`;
+      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`;
       img.onerror=()=>drawFallbackQr(value);
       qr.append(img);
     }

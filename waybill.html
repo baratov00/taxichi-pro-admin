@@ -199,7 +199,8 @@
       doc.querySelectorAll('.dynamic-qr').forEach(x=>x.remove());
       const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none'});
       img.classList.add('dynamic-qr');
-      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=${nonce%2}&color=${nonce%2?'111111':'000000'}&data=${encodeURIComponent(value)}`);
+      img.setAttribute('transform',`rotate(${nonce%2?90:0} 453 ${y+38})`);
+      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`);
     }
 
     (async()=>{
@@ -319,10 +320,12 @@
       txt('МЕДИЦИНСКИЙ ОСМОТР',46,691,'block');
       txt('ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ',46,713,'block');
       txt('ТЕХНИЧЕСКИЙ ОСМОТР',46,726,'block');
-      center(formatDate(postMed),218,662,62,35,'bold');
-      center(formatTime(postMed),280,662,62,35,'bold');
-      center(formatDate(postTech),218,697,62,35,'bold');
-      center(formatTime(postTech),280,697,62,35,'bold');
+      if(closedAt){
+        center(formatDate(postMed),218,662,62,35,'bold');
+        center(formatTime(postMed),280,662,62,35,'bold');
+        center(formatDate(postTech),218,697,62,35,'bold');
+        center(formatTime(postTech),280,697,62,35,'bold');
+      }
 
       rect(36,740,522,80);
       line(218,740,218,820); line(280,740,280,793); line(342,740,342,820);
