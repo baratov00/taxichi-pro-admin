@@ -35,7 +35,7 @@
     .sig{stroke:#263a9b;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none;opacity:.96}
     body.app-view{background:#ddd}
     body.app-view .actions{display:none}
-    body.app-view .sheet{width:100vw;height:auto;margin:0 auto;background:transparent;display:flex;justify-content:center;align-items:flex-start;overflow:visible;padding:18px 0 28px}
+    body.app-view .sheet{width:100vw;height:auto;margin:0 auto;background:transparent;display:flex;justify-content:center;align-items:flex-start;overflow:visible;padding:46px 0 28px}
     body.app-view .page{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.16);transform:scale(var(--app-scale,1));transform-origin:top center}
     body.app-view .draw{transform:translate(36px,24px) scale(.94) translate(-36px,-36px)}
     @page{size:A4;margin:0}
@@ -49,7 +49,7 @@
   </main>
   <script>
     const q=new URLSearchParams(location.search);
-    if(q.get('app')==='driver'){document.body.classList.add('app-view');const fit=()=>document.documentElement.style.setProperty('--app-scale',String(Math.min(((window.innerWidth-22)/595)*1.08,1.22)));fit();addEventListener('resize',fit)}
+    if(q.get('app')==='driver'){document.body.classList.add('app-view');const fit=()=>document.documentElement.style.setProperty('--app-scale',String(Math.min(((window.innerWidth-8)/595)*1.18,1.32)));fit();addEventListener('resize',fit)}
     const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
     const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
     const ACTIVE_ADMIN_ID=q.get('admin')||sessionStorage.getItem('taxichiDispatcherSession')||'demo';
