@@ -125,7 +125,7 @@
     const parseOpenData=value=>{
       const raw=parseOpenMeta(value).data;
       if(!raw)return {};
-      try{return JSON.parse(decodeURIComponent(raw))}catch{return {}}
+      try{return JSON.parse(decodeURIComponent(raw.replace(/\+/g,'%20')))}catch{return {}}
     };
     const scheduleLeadForDriver=d=>{
       try{
@@ -158,6 +158,7 @@
       return text.length>max?text.slice(0,max-1)+'…':text;
     }
     function drawStamp(person,y){
+      const cleanPlus=text=>String(text||'').replace(/\+/g,' ');
       const name=fio(person)||'—';
       const cert=person.electronicSignature||person.certificate||'—';
       const from=stampDate(person.signatureFrom);
@@ -166,8 +167,8 @@
       txt('ДОКУМЕНТ ПОДПИСАН УСИЛЕННОЙ',451,y+18,'stamp','middle');
       txt('КВАЛИФИЦИРОВАННОЙ ЭЛЕКТРОННОЙ ПОДПИСЬЮ',451,y+27,'stamp','middle');
       txtFit(`Сертификат: ${cert}`,356,y+36,190,'stamp');
-      txt(`Владелец: ${shortText(name)}`,451,y+45,'stamp','middle');
-      txtFit(`Действителен: с ${from} по ${until}`,356,y+54,190,'stamp');
+      txt(`Владелец: ${shortText(cleanPlus(name))}`,451,y+45,'stamp','middle');
+      txtFit(`${from} - ${until}`,356,y+54,190,'stamp');
     }
     function bigRow(y,labelLines,person,dt){
       rect(36,y,522,64);
