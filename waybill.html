@@ -195,9 +195,11 @@
         n('path',{d,class:'sig'});
       });
     }
-    function drawQr(value,y=742){
+    function drawQr(value,y=742,nonce=0){
+      doc.querySelectorAll('.dynamic-qr').forEach(x=>x.remove());
       const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none'});
-      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`);
+      img.classList.add('dynamic-qr');
+      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=${nonce%2}&color=${nonce%2?'111111':'000000'}&data=${encodeURIComponent(value)}`);
     }
 
     (async()=>{
@@ -219,7 +221,12 @@
       const meta=parseOpenMeta(w.openedBy||w.opened_by||'');
       const leadMinutes=Number(meta.lead??scheduleLeadForDriver(d));
       const times=buildShiftTimes(dt,leadMinutes);
-      const {medical,tech,shiftStart,exit,end}=times;
+      const {medical,tech,shiftStart,exit}=times;
+      const closedAt=w.closedAt||w.closed_at||w.returnToParkAt||w.return_to_park_at;
+      const end=closedAt?new Date(closedAt):times.end;
+      const returned=new Date(end.getTime());
+      const postMed=new Date(returned.getTime()-10*60000);
+      const postTech=new Date(returned.getTime()-5*60000);
       const orgShort=`${o.legalForm||''} ${o.name}`.trim();
       const orgFooter=`${legalFormFull(o.legalForm)} ${o.name||''}`.trim().toLocaleUpperCase('ru-RU');
       const licensePeriod=(d.licenseFrom||d.licenseUntil)?`с ${dateOnly(d.licenseFrom)||'—'} до ${dateOnly(d.licenseUntil)||'—'}`:'';
@@ -312,6 +319,10 @@
       txt('МЕДИЦИНСКИЙ ОСМОТР',46,691,'block');
       txt('ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ',46,713,'block');
       txt('ТЕХНИЧЕСКИЙ ОСМОТР',46,726,'block');
+      center(formatDate(postMed),218,662,62,35,'bold');
+      center(formatTime(postMed),280,662,62,35,'bold');
+      center(formatDate(postTech),218,697,62,35,'bold');
+      center(formatTime(postTech),280,697,62,35,'bold');
 
       rect(36,740,522,80);
       line(218,740,218,820); line(280,740,280,793); line(342,740,342,820);
@@ -319,9 +330,13 @@
       txt('Возвращение на парковку',46,757,'bold');
       txt('Окончание смены',46,784,'bold');
       txt('Показание одометра, км',46,810,'bold');
+      center(formatDate(returned),218,740,62,26,'bold');
+      center(formatTime(returned),280,740,62,26,'bold');
       center(formatDate(end),218,766,62,27,'bold');
       center(formatTime(end),280,766,62,27,'bold');
-      drawQr(permitUrl,742);
+      let qrNonce=0;
+      drawQr(permitUrl,742,qrNonce);
+      setInterval(()=>drawQr(permitUrl,742,++qrNonce),4000);
       center(orgFooter,36,840,522,20,'footer');
     })();
   </script>

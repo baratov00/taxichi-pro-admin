@@ -134,9 +134,9 @@
 
     <section class="post">
       <div class="label">ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ МЕДИЦИНСКИЙ ОСМОТР</div>
-      <div></div><div></div><div></div>
+      <div id="postMedDate"></div><div id="postMedTime"></div><div></div>
       <div class="label">ПРОШЕЛ ПОСЛЕРЕЙСОВЫЙ ТЕХНИЧЕСКИЙ ОСМОТР</div>
-      <div></div><div></div><div></div>
+      <div id="postTechDate"></div><div id="postTechTime"></div><div></div>
     </section>
 
     <section class="shift">
@@ -189,8 +189,11 @@
     const exit=new Date(w.date);
     const dt=new Date(exit.getTime()-10*60*1000);
     const medTech=new Date(exit.getTime()-15*60*1000);
-    const end=new Date(exit.getTime()+12*60*60*1000);
-    const returned=new Date(end.getTime()-15*60*1000);
+    const closedAt=w.closedAt||w.closed_at||w.returnToParkAt||w.return_to_park_at;
+    const end=closedAt?new Date(closedAt):new Date(exit.getTime()+12*60*60*1000);
+    const returned=new Date(end.getTime());
+    const postMed=new Date(returned.getTime()-10*60*1000);
+    const postTech=new Date(returned.getTime()-5*60*1000);
     const txt=(id,v)=>document.getElementById(id).textContent=v||'—';
     const fio=x=>[x.lastName,x.firstName,x.middleName].filter(Boolean).join(' ');
     const date=x=>x.toLocaleDateString('ru-RU');
@@ -232,6 +235,10 @@
     txt('shiftStartTime',time(dt));
     txt('parkingExitDate',date(exit));
     txt('parkingExitTime',time(exit));
+    txt('postMedDate',date(postMed));
+    txt('postMedTime',time(postMed));
+    txt('postTechDate',date(postTech));
+    txt('postTechTime',time(postTech));
     txt('returnDate',date(returned));
     txt('returnTime',time(returned));
     txt('endDate',date(end));
@@ -254,17 +261,20 @@
         qr.append(cell);
       }
     }
-    function drawQr(value){
+    function drawQr(value,nonce=0){
       const qr=document.getElementById('qr');
+      qr.innerHTML='';
       const img=document.createElement('img');
       img.alt='QR-код ФГИС';
-      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`;
+      img.src=`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=${nonce%2}&color=${nonce%2?'111111':'000000'}&data=${encodeURIComponent(value)}`;
       img.onerror=()=>drawFallbackQr(value);
       qr.append(img);
     }
     const normalizeUrl=value=>/^https?:\/\//i.test(value||'')?value:'https://'+value;
     const permitUrl=normalizeUrl(v.taxiPermitUrl||d.taxiPermitUrl||'https://fgis-taxi.ru/');
-    drawQr(permitUrl);
+    let qrNonce=0;
+    drawQr(permitUrl,qrNonce);
+    setInterval(()=>drawQr(permitUrl,++qrNonce),4000);
     function drawSignature(raw){
       const svg=document.getElementById('driverSignature');
       if(!raw)return;
