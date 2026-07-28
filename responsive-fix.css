@@ -1,13 +1,13 @@
 /*
   Stable desktop layout for the admin cabinet.
-  The cabinet keeps one predictable size on small laptops instead of shrinking
-  cards, tables and the left menu into an oversized/uneven mobile layout.
+  Desktop keeps the familiar cabinet proportions, while small laptop screens
+  adapt instead of stretching the whole site to a giant 1536px canvas.
 */
-:root{--taxichi-admin-width:1536px;--taxichi-sidebar-width:250px}
-html{min-width:var(--taxichi-admin-width);overflow-x:auto;background:#f4f5f6}
-body{min-width:var(--taxichi-admin-width);overflow-x:auto}
+:root{--taxichi-admin-width:1180px;--taxichi-sidebar-width:250px}
+html{min-width:0;overflow-x:auto;background:#f4f5f6}
+body{min-width:0;overflow-x:hidden}
 aside{width:var(--taxichi-sidebar-width)!important;padding:24px 18px!important}
-main{margin-left:var(--taxichi-sidebar-width)!important;width:max(calc(100vw - var(--taxichi-sidebar-width)),calc(var(--taxichi-admin-width) - var(--taxichi-sidebar-width)))!important;min-height:100vh;padding:34px 42px!important}
+main{margin-left:var(--taxichi-sidebar-width)!important;width:calc(100vw - var(--taxichi-sidebar-width))!important;min-height:100vh;padding:34px 42px!important;max-width:calc(100% - var(--taxichi-sidebar-width))}
 .brand span,.brand-copy,nav button,.user{font-size:inherit!important}
 .brand{margin-bottom:36px!important}
 nav button{display:flex!important;align-items:center;padding:13px 14px!important;border-radius:12px!important;font-size:15px!important}
@@ -35,8 +35,13 @@ th:nth-child(3),td:nth-child(3){display:table-cell!important}
 dialog{max-height:90vh;overflow:auto}
 .wide{width:min(900px,calc(100vw - 70px))}
 
-@media(max-width:1535px){
-  html,body{width:var(--taxichi-admin-width)}
+@media(max-width:1180px){
+  main{padding:28px 24px!important}
+  .stats{grid-template-columns:repeat(2,minmax(180px,1fr))!important}
+  .toolbar{gap:12px!important}
+  .panel{overflow-x:auto!important}
+  table{min-width:980px!important}
+  .driver-actions{min-width:300px}
 }
 
 @media(max-width:760px){
