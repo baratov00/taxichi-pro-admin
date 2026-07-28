@@ -4,7 +4,7 @@
   let submitted=false,rememberRequested=false;
   function login(){return document.querySelector('#loginScreen')}
   function form(){return document.querySelector('#loginForm')}
-  function trusted(){return !!initial||!!localStorage.getItem(rememberKey)||submitted}
+  function trusted(){return !!initial||!!localStorage.getItem(rememberKey)||!!new URLSearchParams(location.search).get('directorView')||submitted}
   function lock(){
     if(trusted())return;
     sessionStorage.removeItem(key);

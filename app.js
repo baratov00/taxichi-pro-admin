@@ -6,8 +6,9 @@ const driverSeed={phone:'+7 (993) 353-25-69',password:'4829',lastName:'Бара�
 const vehicleSeed={id:'veh-1',car:'KIA RIO',plate:'В148РВ799',year:'2021',color:'Белый',organizationId:'org-1',driverId:'driver-1',diagnosticFrom:'2026-03-18',diagnostic:'2027-03-18',osagoNumber:'XXX1234567890',osagoFrom:'2025-11-26',osago:'2026-11-26',osgopNumber:'XXX0598830871',osgopFrom:'2025-08-14',osgop:'2026-08-14',taxiPermitNumber:'77-123456',taxiPermitUrl:'https://fgis-taxi.ru/'};
 const waybillSeed=[{id:'1',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:125430,date:'2026-07-05T08:42',status:'Открыто'},{id:'2',driver:'Баратов Асадбек Екубжанович',plate:'В148РВ799',car:'KIA RIO',odometer:124988,date:'2026-07-04T07:55',status:'Закрыто'},{id:'3',driver:'Иванов Сергей Петрович',plate:'А482КТ77',car:'ŠKODA RAPID',odometer:98212,date:'2026-07-03T08:10',status:'Закрыто'}];
 const ADMIN_QUERY_ID=new URLSearchParams(location.search).get('admin');
-if(ADMIN_QUERY_ID&&sessionStorage.getItem('taxichiDispatcherSession')===ADMIN_QUERY_ID)localStorage.setItem('taxichiDispatcherLastAdmin',ADMIN_QUERY_ID);
-const ACTIVE_ADMIN_ID=ADMIN_QUERY_ID||sessionStorage.getItem('taxichiDispatcherSession')||'demo',ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
+const SESSION_ADMIN_ID=sessionStorage.getItem('taxichiDispatcherSession')||'';
+if(ADMIN_QUERY_ID&&SESSION_ADMIN_ID===ADMIN_QUERY_ID)localStorage.setItem('taxichiDispatcherLastAdmin',ADMIN_QUERY_ID);
+const ACTIVE_ADMIN_ID=(ADMIN_QUERY_ID&&SESSION_ADMIN_ID===ADMIN_QUERY_ID)?ADMIN_QUERY_ID:(SESSION_ADMIN_ID||'demo'),ADMIN_DATA_KEYS=new Set(['taxichiProDrivers','taxichiProOrganizations','taxichiProStaff','taxichiProVehicles','taxichiProWaybills','taxichiProScheduleSettings']);
 function storageKey(key){return ADMIN_DATA_KEYS.has(key)?`taxichiProAdmin:${ACTIVE_ADMIN_ID}:${key}`:key}
 function load(key,fallback){try{const raw=localStorage.getItem(storageKey(key)),legacy=ACTIVE_ADMIN_ID==='demo'?localStorage.getItem(key):null;return JSON.parse((raw??legacy)??'null')??fallback}catch{return fallback}}
 function store(key,value){localStorage.setItem(storageKey(key),JSON.stringify(value))}
