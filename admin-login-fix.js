@@ -7,6 +7,7 @@
   const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
   const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
   const API_BASE=SUPABASE_URL+'/rest/v1';
+  const AUTH_URL=SUPABASE_URL+'/functions/v1/taxichi-auth';
   const API_HEADERS={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Accept-Profile':'public','Content-Profile':'public'};
   const phoneDigits=value=>String(value||'').replace(/\D/g,'');
   const clean=value=>String(value||'').trim();
@@ -17,9 +18,7 @@
   const directorViewToken=params.get('directorView')||'';
   const adminId=params.get('admin')||'';
 
-  if(directorViewToken&&adminId){
-    validateDirectorView(adminId,directorViewToken);
-  }
+  if(directorViewToken&&adminId)validateDirectorView(adminId,directorViewToken);
 
   function setError(text){if(error)error.textContent=text}
   function settings(value){
@@ -28,7 +27,14 @@
     return value||{};
   }
 
-  async function fetchDispatchers(){
+  async function serverAuth(action,payload){
+    const response=await fetch(AUTH_URL,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw Object.assign(new Error(result.error||'auth_failed'),{status:response.status,result});
+    return result;
+  }
+
+  async function fetchDispatchersFallback(){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),12000);
     try{
@@ -66,6 +72,19 @@
     }
   }
 
+  async function loginViaServer(data){
+    const result=await serverAuth('adminLogin',{login:data.login,password:data.password});
+    if(!result?.account?.id)throw new Error('bad_auth_response');
+    sessionStorage.setItem('taxichiAdminSessionToken',result.sessionToken||'');
+    return result.account;
+  }
+
+  async function loginFallback(data){
+    const account=(await fetchDispatchersFallback()).find(x=>match(x,data.login)&&String(x.password||'')===String(data.password||''));
+    if(!account)throw Object.assign(new Error('bad_credentials'),{status:401});
+    return account;
+  }
+
   form.addEventListener('submit',async event=>{
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -75,10 +94,12 @@
     setError('');
     try{
       const data=Object.fromEntries(new FormData(form));
-      const account=(await fetchDispatchers()).find(x=>match(x,data.login)&&String(x.password||'')===String(data.password||''));
-      if(!account){
-        setError('Логин или пароль неверно, обратитесь в поддержку');
-        return;
+      let account;
+      try{
+        account=await loginViaServer(data);
+      }catch(serverError){
+        console.warn('server admin login failed, trying temporary fallback',serverError);
+        account=await loginFallback(data);
       }
       const id=account.id||'';
       sessionStorage.setItem('taxichiDispatcherSession',id);
@@ -88,7 +109,7 @@
       location.href=`${location.pathname}?admin=${encodeURIComponent(id)}`;
     }catch(err){
       console.warn('admin login failed',err);
-      setError('Сервер не отвечает. Проверьте интернет или обратитесь в поддержку');
+      setError(err.status===401?'Логин или пароль неверно, обратитесь в поддержку':'Сервер не отвечает. Проверьте интернет или обратитесь в поддержку');
     }finally{
       if(button){button.disabled=false;button.textContent=oldText||'Войти'}
     }
