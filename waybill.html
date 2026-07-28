@@ -27,7 +27,7 @@
     .block{font:700 9.4px Arial,sans-serif}
     .large{font:700 17px Arial,sans-serif}
     .odo{font:700 14px Arial,sans-serif}
-    .footer{font:700 9px Arial,sans-serif}
+    .footer{font:700 10px Arial,sans-serif}
     .stamp{font:400 6.4px Arial,sans-serif;fill:#2439c7}
     .memoText{font:400 7.2px Arial,sans-serif;fill:#111}
     .line{stroke:#111;stroke-width:1.2;fill:none}
@@ -38,7 +38,7 @@
     body.app-view .sheet{width:100vw;height:auto;margin:0 auto;background:transparent;display:flex;justify-content:center;align-items:flex-start;overflow:visible;padding:22px 0 28px}
     body.app-view .page{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.16);transform:scale(var(--app-scale,1));transform-origin:top center}
     body.mobile-view .sheet{padding:62px 0 30px}
-    body.mobile-view .page{box-shadow:0 2px 10px rgba(0,0,0,.14)}
+    body.mobile-view .page{height:900px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
     body.app-view .draw{transform:translate(36px,24px) scale(1) translate(-36px,-36px)}
     @page{size:A4;margin:0}
     @media print{body{background:#fff}.actions{display:none}.sheet{margin:0}}
@@ -357,7 +357,7 @@
       let qrNonce=0;
       drawQr(permitUrl,742,qrNonce);
       setInterval(()=>drawQr(permitUrl,742,++qrNonce),4000);
-      center(orgFooter,36,840,522,20,'footer');
+      center(orgFooter,36,828,522,20,'footer');
     })();
   </script>
 </body>
