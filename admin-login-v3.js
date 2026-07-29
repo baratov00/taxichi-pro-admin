@@ -6,7 +6,9 @@
 
   const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
   const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
+  const REST_URL=SUPABASE_URL+'/rest/v1/taxichi_pro_dispatchers?select=*&active=eq.true&order=created_at.asc';
   const AUTH_URL=SUPABASE_URL+'/functions/v1/taxichi-auth';
+  const HEADERS={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Accept-Profile':'public','Content-Profile':'public'};
 
   const params=new URLSearchParams(location.search);
   if(params.get('reset')==='1'){
@@ -16,6 +18,7 @@
     location.replace(location.pathname);
     return;
   }
+
   const clearKnownAutofill=()=>{
     const login=form.elements.login;
     const password=form.elements.password;
@@ -29,36 +32,18 @@
   [250,800,1600].forEach(ms=>setTimeout(clearKnownAutofill,ms));
 
   function setError(text){if(error)error.textContent=text}
-  function errorCode(err){
-    if(err?.status)return `HTTP ${err.status}`;
-    if(err?.name==='AbortError')return 'TIMEOUT';
-    if(String(err?.message||'').includes('Failed to fetch'))return 'NETWORK';
-    return err?.message||'UNKNOWN';
-  }
-  async function fetchWithTimeout(url,options={},timeoutMs=30000){
+  function clean(value){return String(value||'').trim()}
+  function digits(value){return String(value||'').replace(/\D/g,'')}
+  async function fetchWithTimeout(url,options={},timeoutMs=10000){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{return await fetch(url,{...options,signal:controller.signal,cache:'no-store'})}
     finally{clearTimeout(timer)}
   }
-  async function adminLogin(data){
-    const response=await fetchWithTimeout(AUTH_URL,{
-      method:'POST',
-      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({action:'adminLogin',login:data.login,password:data.password})
-    });
-    const result=await response.json().catch(()=>({}));
-    if(!response.ok)throw Object.assign(new Error(result.error||'auth_failed'),{status:response.status,result});
-    if(!result?.account?.id)throw new Error('bad_auth_response');
-    return result;
-  }
-  async function fallbackLogin(data){
-    const response=await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/taxichi_pro_dispatchers?select=*&active=eq.true&order=created_at.asc`,{
-      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Accept-Profile':'public','Content-Profile':'public'}
-    },30000);
-    if(!response.ok)throw Object.assign(new Error('fallback_failed'),{status:response.status});
-    const clean=value=>String(value||'').trim();
-    const digits=value=>String(value||'').replace(/\D/g,'');
+
+  async function fastLogin(data){
+    const response=await fetchWithTimeout(REST_URL,{headers:HEADERS},10000);
+    if(!response.ok)throw Object.assign(new Error('rest_failed'),{status:response.status});
     const rows=await response.json();
     const login=clean(data.login);
     const loginDigits=digits(login);
@@ -70,7 +55,17 @@
       String(row.password||'')===String(data.password||'')
     );
     if(!account)throw Object.assign(new Error('bad_credentials'),{status:401});
-    return {account,sessionToken:''};
+    return account;
+  }
+
+  function warmServerAuth(data){
+    fetch(AUTH_URL,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({action:'adminLogin',login:data.login,password:data.password})
+    }).then(r=>r.json().catch(()=>({}))).then(result=>{
+      if(result?.sessionToken)sessionStorage.setItem('taxichiAdminSessionToken',result.sessionToken);
+    }).catch(err=>console.warn('background server auth skipped',err));
   }
 
   form.addEventListener('submit',async event=>{
@@ -82,25 +77,18 @@
     setError('');
     try{
       const data=Object.fromEntries(new FormData(form));
-      let result;
-      try{
-        result=await adminLogin(data);
-      }catch(serverError){
-        if(serverError.status===401)throw serverError;
-        console.warn('server login timed out, trying fallback',serverError);
-        result=await fallbackLogin(data);
-      }
-      const id=result.account.id||'';
+      const account=await fastLogin(data);
+      const id=account.id||'';
       sessionStorage.setItem('taxichiDispatcherSession',id);
-      sessionStorage.setItem('taxichiAdminSessionToken',result.sessionToken||'');
       localStorage.setItem('taxichiDispatcherLastAdmin',id);
       if(data.remember)localStorage.setItem('taxichiDispatcherRemember',id);
       else localStorage.removeItem('taxichiDispatcherRemember');
+      warmServerAuth(data);
       location.href=`${location.pathname}?admin=${encodeURIComponent(id)}`;
     }catch(err){
       console.warn('admin login failed',err);
       if(err.status===401)setError('Логин или пароль неверно, обратитесь в поддержку');
-      else setError(`Сервер не отвечает (${errorCode(err)}). Откройте https://admin.taxichi.pro/?reset=1 и попробуйте ещё раз.`);
+      else setError('Сервер не отвечает. Проверьте интернет и откройте https://admin.taxichi.pro/?reset=1');
     }finally{
       if(button){button.disabled=false;button.textContent=oldText||'Войти'}
     }
