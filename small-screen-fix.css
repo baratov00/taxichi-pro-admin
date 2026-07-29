@@ -1,0 +1,73 @@
+/*
+  Small laptop safety layer.
+  Keeps the left menu separate and makes wide sections scroll inside their own
+  panels, so right-side buttons never disappear off screen.
+*/
+@media (max-width:1360px) and (min-width:761px){
+  html,body{overflow-x:hidden!important}
+  aside{
+    width:96px!important;
+    padding:16px 10px 76px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+  .brand{justify-content:center!important;margin:0 0 18px!important}
+  .brand img{width:42px!important;height:42px!important}
+  .brand span,.brand-copy,.user b,.user small{display:none!important}
+  nav{gap:8px!important}
+  nav button,.report-link{
+    justify-content:center!important;
+    min-height:48px!important;
+    padding:10px 8px!important;
+    font-size:0!important;
+  }
+  nav button .nav-icon,.report-link .nav-icon{
+    width:27px!important;
+    height:27px!important;
+    margin:0!important;
+  }
+  .user{
+    display:grid!important;
+    margin-top:18px!important;
+    padding:14px 0 0!important;
+  }
+  .user button{font-size:11px!important;padding:8px 4px!important}
+  main{
+    margin-left:96px!important;
+    width:calc(100vw - 96px)!important;
+    max-width:calc(100vw - 96px)!important;
+    padding:24px 22px!important;
+    overflow-x:hidden!important;
+  }
+  header{gap:14px!important}
+  h1{font-size:28px!important}
+  .panel{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  table{
+    min-width:1120px!important;
+    width:max-content!important;
+  }
+  th,td{padding:12px 14px!important}
+  .driver-actions{
+    min-width:330px!important;
+    justify-content:flex-start!important;
+    flex-wrap:nowrap!important;
+  }
+  .driver-actions button,.driver-waybill,.open{white-space:nowrap!important}
+  .toolbar{min-width:860px!important}
+  .table-pagination{
+    max-width:100%!important;
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  dialog,.wide,#staffDialog{
+    max-width:calc(100vw - 120px)!important;
+    max-height:calc(100vh - 30px)!important;
+    overflow:auto!important;
+  }
+}
