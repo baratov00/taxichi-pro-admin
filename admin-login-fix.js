@@ -15,6 +15,20 @@
   const match=(account,login)=>clean(account.login)===clean(login)||(phoneDigits(login)&&phoneDigits(account.phone)===phoneDigits(login));
 
   const params=new URLSearchParams(location.search);
+  if(params.get('reset')==='1'){
+    sessionStorage.removeItem('taxichiDispatcherSession');
+    sessionStorage.removeItem('taxichiAdminSessionToken');
+    sessionStorage.removeItem('taxichiDirectorViewToken');
+    sessionStorage.removeItem('taxichiDirectorViewMode');
+    localStorage.removeItem('taxichiDispatcherRemember');
+    localStorage.removeItem('taxichiDispatcherLastAdmin');
+    params.delete('admin');
+    params.delete('directorView');
+    params.delete('directorViewReady');
+    params.delete('reset');
+    location.replace(`${location.pathname}${params.toString()?`?${params.toString()}`:''}`);
+    return;
+  }
   const directorViewToken=params.get('directorView')||'';
   const adminId=params.get('admin')||'';
 
@@ -110,7 +124,7 @@
       location.href=`${location.pathname}?admin=${encodeURIComponent(id)}`;
     }catch(err){
       console.warn('admin login failed',err);
-      setError(err.status===401?'Логин или пароль неверно, обратитесь в поддержку':'Сервер не отвечает. Проверьте интернет или обратитесь в поддержку');
+      setError(err.status===401?'Логин или пароль неверно, обратитесь в поддержку':'Сервер не отвечает. Откройте страницу https://admin.taxichi.pro/?reset=1 или проверьте, открывается ли supabase.co');
     }finally{
       if(button){button.disabled=false;button.textContent=oldText||'Войти'}
     }
