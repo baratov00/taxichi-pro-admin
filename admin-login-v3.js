@@ -16,6 +16,17 @@
     location.replace(location.pathname);
     return;
   }
+  const clearKnownAutofill=()=>{
+    const login=form.elements.login;
+    const password=form.elements.password;
+    const value=String(login?.value||'').trim().toLowerCase();
+    if(value==='baratov329@mail.ru'||value==='farhodzhon'||value==='admin'){
+      login.value='';
+      if(password)password.value='';
+    }
+  };
+  clearKnownAutofill();
+  [250,800,1600].forEach(ms=>setTimeout(clearKnownAutofill,ms));
 
   function setError(text){if(error)error.textContent=text}
   function errorCode(err){
