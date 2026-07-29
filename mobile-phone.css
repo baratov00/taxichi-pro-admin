@@ -1,6 +1,6 @@
 @media(max-width:760px){
-  html{background:#f4f5f6!important;overflow-x:auto!important}
-  body{display:block!important;background:#f4f5f6!important;padding-bottom:82px!important;overflow-x:auto!important}
+  html{background:#f4f5f6!important;overflow-x:hidden!important}
+  body{display:block!important;background:#f4f5f6!important;padding-bottom:82px!important;overflow-x:hidden!important}
   aside{
     position:fixed!important;
     left:0!important;right:0!important;bottom:0!important;top:auto!important;

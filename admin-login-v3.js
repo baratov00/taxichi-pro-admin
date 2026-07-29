@@ -23,6 +23,7 @@
   const clearKnownAutofill=()=>{
     const login=form.elements.login;
     const password=form.elements.password;
+    if(document.activeElement===login||document.activeElement===password)return;
     const value=String(login?.value||'').trim().toLowerCase();
     if(value==='baratov329@mail.ru'||value==='farhodzhon'||value==='admin'){
       login.value='';
@@ -47,12 +48,13 @@
     if(!response.ok)throw Object.assign(new Error('rest_failed'),{status:response.status});
     const rows=await response.json();
     const login=clean(data.login);
+    const loginLower=login.toLowerCase();
     const loginDigits=digits(login);
     const account=(rows||[]).find(row=>
       String(row.id||'')!=='demo' &&
       String(row.name||'')!=='Иванова Мария' &&
       String(row.login||'')!=='admin' &&
-      (clean(row.login)===login || (loginDigits && digits(row.phone)===loginDigits)) &&
+      (clean(row.login).toLowerCase()===loginLower || (loginDigits && digits(row.phone)===loginDigits)) &&
       String(row.password||'')===String(data.password||'')
     );
     if(!account)throw Object.assign(new Error('bad_credentials'),{status:401});
@@ -81,7 +83,6 @@
       const account=await fastLogin(data);
       const id=account.id||'';
       sessionStorage.setItem('taxichiDispatcherSession',id);
-      localStorage.setItem('taxichiDispatcherLastAdmin',id);
       localStorage.removeItem('taxichiDispatcherRemember');
       localStorage.removeItem('taxichiDispatcherLastAdmin');
       if(data.remember)localStorage.setItem('taxichiDispatcherRememberV2',id);
