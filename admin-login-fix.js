@@ -98,6 +98,7 @@
       try{
         account=await loginViaServer(data);
       }catch(serverError){
+        if(serverError.status===401)throw serverError;
         console.warn('server admin login failed, trying temporary fallback',serverError);
         account=await loginFallback(data);
       }
