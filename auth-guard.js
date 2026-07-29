@@ -1,5 +1,7 @@
 (function(){
-  const key='taxichiDispatcherSession',rememberKey='taxichiDispatcherRemember';
+  const key='taxichiDispatcherSession',rememberKey='taxichiDispatcherRememberV2';
+  localStorage.removeItem('taxichiDispatcherRemember');
+  localStorage.removeItem('taxichiDispatcherLastAdmin');
   const initial=window.__taxichiInitialAdminSession||'';
   let submitted=false,rememberRequested=false;
   function login(){return document.querySelector('#loginScreen')}

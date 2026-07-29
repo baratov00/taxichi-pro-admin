@@ -14,6 +14,7 @@
   if(params.get('reset')==='1'){
     sessionStorage.clear();
     localStorage.removeItem('taxichiDispatcherRemember');
+    localStorage.removeItem('taxichiDispatcherRememberV2');
     localStorage.removeItem('taxichiDispatcherLastAdmin');
     location.replace(location.pathname);
     return;
@@ -81,8 +82,10 @@
       const id=account.id||'';
       sessionStorage.setItem('taxichiDispatcherSession',id);
       localStorage.setItem('taxichiDispatcherLastAdmin',id);
-      if(data.remember)localStorage.setItem('taxichiDispatcherRemember',id);
-      else localStorage.removeItem('taxichiDispatcherRemember');
+      localStorage.removeItem('taxichiDispatcherRemember');
+      localStorage.removeItem('taxichiDispatcherLastAdmin');
+      if(data.remember)localStorage.setItem('taxichiDispatcherRememberV2',id);
+      else localStorage.removeItem('taxichiDispatcherRememberV2');
       warmServerAuth(data);
       location.href=`${location.pathname}?admin=${encodeURIComponent(id)}`;
     }catch(err){
