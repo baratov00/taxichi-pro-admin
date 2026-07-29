@@ -9,6 +9,7 @@
   const API_BASE=SUPABASE_URL+'/rest/v1';
   const AUTH_URL=SUPABASE_URL+'/functions/v1/taxichi-auth';
   const API_HEADERS={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Accept-Profile':'public','Content-Profile':'public'};
+
   const phoneDigits=value=>String(value||'').replace(/\D/g,'');
   const clean=value=>String(value||'').trim();
   const removed=d=>String(d?.id||'')==='demo'||String(d?.name||'')==='Иванова Мария'||String(d?.login||'')==='admin';
@@ -29,9 +30,9 @@
     location.replace(`${location.pathname}${params.toString()?`?${params.toString()}`:''}`);
     return;
   }
+
   const directorViewToken=params.get('directorView')||'';
   const adminId=params.get('admin')||'';
-
   if(directorViewToken&&adminId)validateDirectorView(adminId,directorViewToken);
 
   function setError(text){if(error)error.textContent=text}
@@ -40,30 +41,44 @@
     if(typeof value==='string'){try{return JSON.parse(value)}catch{return {}}}
     return value||{};
   }
+  function errorCode(err){
+    if(err?.status)return `HTTP ${err.status}`;
+    if(err?.name==='AbortError')return 'TIMEOUT';
+    if(String(err?.message||'').includes('Failed to fetch'))return 'NETWORK';
+    return err?.message||'UNKNOWN';
+  }
+
+  async function fetchWithTimeout(url,options={},timeoutMs=12000){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
+    try{
+      return await fetch(url,{...options,signal:controller.signal,cache:'no-store'});
+    }finally{
+      clearTimeout(timer);
+    }
+  }
 
   async function serverAuth(action,payload){
-    const response=await fetch(AUTH_URL,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
+    const response=await fetchWithTimeout(AUTH_URL,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({action,...payload})
+    });
     const result=await response.json().catch(()=>({}));
     if(!response.ok)throw Object.assign(new Error(result.error||'auth_failed'),{status:response.status,result});
     return result;
   }
 
   async function fetchDispatchersFallback(){
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),12000);
-    try{
-      const response=await fetch(`${API_BASE}/taxichi_pro_dispatchers?select=*&order=created_at.asc`,{headers:API_HEADERS,cache:'no-store',signal:controller.signal});
-      if(!response.ok)throw new Error(await response.text());
-      return (await response.json()).filter(d=>!removed(d)&&d.active!==false);
-    }finally{
-      clearTimeout(timer);
-    }
+    const response=await fetchWithTimeout(`${API_BASE}/taxichi_pro_dispatchers?select=*&order=created_at.asc`,{headers:API_HEADERS});
+    if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});
+    return (await response.json()).filter(d=>!removed(d)&&d.active!==false);
   }
 
   async function validateDirectorView(id,token){
     try{
-      const response=await fetch(`${API_BASE}/taxichi_pro_dispatchers?select=id,payment_settings&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:API_HEADERS,cache:'no-store'});
-      if(!response.ok)throw new Error(await response.text());
+      const response=await fetchWithTimeout(`${API_BASE}/taxichi_pro_dispatchers?select=id,payment_settings&id=eq.${encodeURIComponent(id)}&limit=1`,{headers:API_HEADERS});
+      if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});
       const row=(await response.json())[0]||null;
       const view=settings(row?.payment_settings).directorView||{};
       const ok=view.token===token&&(Date.parse(view.expiresAt||'')||0)>Date.now();
@@ -124,7 +139,11 @@
       location.href=`${location.pathname}?admin=${encodeURIComponent(id)}`;
     }catch(err){
       console.warn('admin login failed',err);
-      setError(err.status===401?'Логин или пароль неверно, обратитесь в поддержку':'Сервер не отвечает. Откройте страницу https://admin.taxichi.pro/?reset=1 или проверьте, открывается ли supabase.co');
+      if(err.status===401){
+        setError('Логин или пароль неверно, обратитесь в поддержку');
+      }else{
+        setError(`Сервер не отвечает (${errorCode(err)}). Откройте https://admin.taxichi.pro/?reset=1 и попробуйте ещё раз.`);
+      }
     }finally{
       if(button){button.disabled=false;button.textContent=oldText||'Войти'}
     }
