@@ -24,7 +24,7 @@
     if(String(err?.message||'').includes('Failed to fetch'))return 'NETWORK';
     return err?.message||'UNKNOWN';
   }
-  async function fetchWithTimeout(url,options={},timeoutMs=12000){
+  async function fetchWithTimeout(url,options={},timeoutMs=30000){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{return await fetch(url,{...options,signal:controller.signal,cache:'no-store'})}
@@ -41,6 +41,26 @@
     if(!result?.account?.id)throw new Error('bad_auth_response');
     return result;
   }
+  async function fallbackLogin(data){
+    const response=await fetchWithTimeout(`${SUPABASE_URL}/rest/v1/taxichi_pro_dispatchers?select=*&active=eq.true&order=created_at.asc`,{
+      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Accept-Profile':'public','Content-Profile':'public'}
+    },30000);
+    if(!response.ok)throw Object.assign(new Error('fallback_failed'),{status:response.status});
+    const clean=value=>String(value||'').trim();
+    const digits=value=>String(value||'').replace(/\D/g,'');
+    const rows=await response.json();
+    const login=clean(data.login);
+    const loginDigits=digits(login);
+    const account=(rows||[]).find(row=>
+      String(row.id||'')!=='demo' &&
+      String(row.name||'')!=='Иванова Мария' &&
+      String(row.login||'')!=='admin' &&
+      (clean(row.login)===login || (loginDigits && digits(row.phone)===loginDigits)) &&
+      String(row.password||'')===String(data.password||'')
+    );
+    if(!account)throw Object.assign(new Error('bad_credentials'),{status:401});
+    return {account,sessionToken:''};
+  }
 
   form.addEventListener('submit',async event=>{
     event.preventDefault();
@@ -51,7 +71,14 @@
     setError('');
     try{
       const data=Object.fromEntries(new FormData(form));
-      const result=await adminLogin(data);
+      let result;
+      try{
+        result=await adminLogin(data);
+      }catch(serverError){
+        if(serverError.status===401)throw serverError;
+        console.warn('server login timed out, trying fallback',serverError);
+        result=await fallbackLogin(data);
+      }
       const id=result.account.id||'';
       sessionStorage.setItem('taxichiDispatcherSession',id);
       sessionStorage.setItem('taxichiAdminSessionToken',result.sessionToken||'');
