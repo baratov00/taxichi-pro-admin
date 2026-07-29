@@ -44,6 +44,42 @@ dialog{max-height:90vh;overflow:auto}
   .driver-actions{min-width:300px}
 }
 
+@media(max-width:1180px) and (min-width:761px){
+  :root{--taxichi-sidebar-width:210px!important}
+  aside{width:210px!important;padding:18px 14px!important}
+  main{margin-left:210px!important;width:calc(100vw - 210px)!important;max-width:calc(100% - 210px)!important;padding:22px 20px!important}
+  .brand{margin-bottom:22px!important}
+  .brand-copy b{font-size:18px!important}
+  .brand-copy small{font-size:11px!important}
+  nav button{padding:10px 11px!important;font-size:13px!important;border-radius:10px!important}
+  .nav-icon{width:25px!important;height:25px!important;flex-basis:25px!important;margin-right:8px!important}
+  h1{font-size:26px!important}
+  header p{font-size:13px!important;margin:5px 0 0!important}
+  .stats article{padding:15px!important}
+  .stats strong{font-size:24px!important}
+  table{min-width:860px!important}
+  th,td{padding:11px 12px!important}
+  .driver-person{min-width:180px!important}
+  .driver-cell{min-width:135px!important}
+  .driver-actions{min-width:260px!important;gap:5px!important}
+  .driver-actions button,.driver-waybill,.open{padding:8px 10px!important;font-size:13px!important}
+  .admin-balance-widget span{max-width:120px!important}
+  .wide{width:min(820px,calc(100vw - 44px))!important}
+}
+
+@media(max-width:900px) and (min-width:761px){
+  :root{--taxichi-sidebar-width:82px!important}
+  aside{width:82px!important;padding:16px 10px!important}
+  main{margin-left:82px!important;width:calc(100vw - 82px)!important;max-width:calc(100% - 82px)!important;padding:18px 16px!important}
+  .brand{justify-content:center!important;margin-bottom:18px!important}
+  .brand-copy,.user b,.user small{display:none!important}
+  nav button{justify-content:center!important;padding:10px 8px!important;min-height:44px!important;font-size:0!important}
+  nav button .nav-icon,.report-link .nav-icon{margin-right:0!important}
+  .report-link{font-size:0!important;justify-content:center!important}
+  .stats{grid-template-columns:1fr 1fr!important}
+  table{min-width:780px!important}
+}
+
 @media(max-width:760px){
   html,body{min-width:0!important;width:auto!important;overflow-x:hidden!important}
   body{display:block!important}
