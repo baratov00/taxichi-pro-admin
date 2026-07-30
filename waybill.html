@@ -230,7 +230,7 @@
         img.alt='QR';
         page.append(img);
       }
-      img.src=src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${nonce}`;
+      img.src=`https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${nonce}`;
       img.style.top=`${y-12}px`;
       img.style.transform=`rotate(${nonce%2?90:0}deg)`;
     }
