@@ -40,6 +40,8 @@
     body.mobile-view .sheet{padding:62px 0 30px}
     body.mobile-view .page{height:900px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
     body.app-view .draw{transform:translate(36px,24px) scale(1) translate(-36px,-36px)}
+    .mobile-qr{display:none}
+    body.mobile-view .mobile-qr{display:block;position:absolute;left:415px;top:730px;width:76px;height:76px;z-index:5;transform-origin:center center}
     @page{size:A4;margin:0}
     @media print{body{background:#fff}.actions{display:none}.sheet{margin:0}}
   </style>
@@ -215,6 +217,22 @@
       const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none',class:'dynamic-qr',transform:`rotate(${nonce%2?90:0} 453 ${y+38})`});
       img.setAttributeNS('http://www.w3.org/1999/xlink','href',src);
       img.setAttribute('href',src);
+      drawMobileQr(value,y,nonce,src);
+    }
+    function drawMobileQr(value,y=742,nonce=0,src=''){
+      if(!document.body.classList.contains('mobile-view'))return;
+      const page=document.querySelector('.page');
+      if(!page)return;
+      let img=page.querySelector('.mobile-qr');
+      if(!img){
+        img=document.createElement('img');
+        img.className='mobile-qr';
+        img.alt='QR';
+        page.append(img);
+      }
+      img.src=src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${nonce}`;
+      img.style.top=`${y-12}px`;
+      img.style.transform=`rotate(${nonce%2?90:0}deg)`;
     }
 
     (async()=>{
