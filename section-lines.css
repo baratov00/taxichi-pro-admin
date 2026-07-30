@@ -1,0 +1,29 @@
+/* Clear separators for admin sections: drivers, organizations, cars, medics, mechanics, archive. */
+.panel table{border-collapse:separate!important;border-spacing:0!important}
+.panel thead th{
+  border-bottom:2px solid #dfe4ea!important;
+  background:#fafbfc!important;
+}
+.panel tbody tr{
+  position:relative;
+}
+.panel tbody tr+tr td{
+  border-top:1px solid #dfe4ea!important;
+}
+.panel tbody td{
+  border-top:0!important;
+  border-bottom:1px solid #eef1f4!important;
+}
+.panel tbody tr:hover td{
+  background:#fffdf3!important;
+}
+.panel tbody td+td{
+  border-left:1px solid #f0f2f5!important;
+}
+@media(max-width:760px){
+  .panel tbody tr{
+    border:1px solid #dfe4ea!important;
+    border-left:4px solid #ffd21c!important;
+  }
+  .panel tbody td+td{border-left:0!important}
+}
