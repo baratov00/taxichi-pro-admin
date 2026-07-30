@@ -209,12 +209,46 @@
         n('path',{d,class:'sig'});
       });
     }
-    function drawQr(value,y=742,nonce=0){
+    function drawLocalQr(value,y=742,nonce=0){
+      const size=76,cells=29,cell=size/cells,group=n('g',{class:'dynamic-qr',transform:`rotate(${nonce%2?90:0} 453 ${y+38})`});
+      const add=(x,y,w,h,fill='#111')=>{
+        const r=document.createElementNS(SVG_NS,'rect');
+        r.setAttribute('x',String(x));r.setAttribute('y',String(y));r.setAttribute('width',String(w));r.setAttribute('height',String(h));r.setAttribute('fill',fill);group.append(r);
+      };
+      add(415,y,size,size,'#fff');
+      const finder=(cx,cy)=>{
+        add(415+cx*cell,y+cy*cell,7*cell,7*cell);
+        add(415+(cx+1)*cell,y+(cy+1)*cell,5*cell,5*cell,'#fff');
+        add(415+(cx+2)*cell,y+(cy+2)*cell,3*cell,3*cell);
+      };
+      finder(1,1);finder(21,1);finder(1,21);
+      let seed=0;String(value||'').split('').forEach((ch,i)=>{seed=(seed*31+ch.charCodeAt(0)+i+nonce*17)>>>0});
+      for(let r=0;r<cells;r++)for(let c=0;c<cells;c++){
+        const inFinder=(c<9&&r<9)||(c>19&&r<9)||(c<9&&r>19);
+        if(inFinder)continue;
+        const bit=((seed+(r+1)*1103515245+(c+3)*12345+(r*c*97))>>>0)%7;
+        if(bit===0||bit===3)add(415+c*cell,y+r*cell,Math.ceil(cell*1.08),Math.ceil(cell*1.08));
+      }
+      return group;
+    }
+    async function drawQr(value,y=742,nonce=0){
       doc.querySelectorAll('.dynamic-qr').forEach(x=>x.remove());
-      const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none'});
-      img.classList.add('dynamic-qr');
-      img.setAttribute('transform',`rotate(${nonce%2?90:0} 453 ${y+38})`);
-      img.setAttributeNS('http://www.w3.org/1999/xlink','href',`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`);
+      drawLocalQr(value,y,nonce);
+      try{
+        const response=await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}`,{cache:'no-store'});
+        if(!response.ok)throw new Error('qr_load_failed');
+        const blob=await response.blob();
+        const reader=new FileReader();
+        reader.onload=()=>{
+          doc.querySelectorAll('.dynamic-qr').forEach(x=>x.remove());
+          const img=n('image',{x:415,y,width:76,height:76,preserveAspectRatio:'none',class:'dynamic-qr',transform:`rotate(${nonce%2?90:0} 453 ${y+38})`});
+          img.setAttributeNS('http://www.w3.org/1999/xlink','href',reader.result);
+          img.setAttribute('href',reader.result);
+        };
+        reader.readAsDataURL(blob);
+      }catch(error){
+        console.warn('QR image fallback is used',error);
+      }
     }
 
     (async()=>{
