@@ -228,8 +228,11 @@
         img=document.createElement('img');
         img.className='mobile-qr';
         img.alt='QR';
+        img.onload=()=>{img.style.display='block'};
+        img.onerror=()=>{img.style.display='none'};
         page.append(img);
       }
+      img.style.display='none';
       img.src=`https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${nonce}`;
       img.style.top=`${y-12}px`;
       img.style.transform=`rotate(${nonce%2?90:0}deg)`;
