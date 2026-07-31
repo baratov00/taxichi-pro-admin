@@ -4,7 +4,11 @@
   panels, so right-side buttons never disappear off screen.
 */
 @media (max-width:1360px) and (min-width:761px){
-  html,body{overflow-x:auto!important}
+  html,body{
+    overflow:auto!important;
+    min-width:0!important;
+    min-height:100%!important;
+  }
   aside{
     width:96px!important;
     padding:16px 10px 76px!important;
@@ -37,7 +41,8 @@
     width:calc(100vw - 96px)!important;
     max-width:calc(100vw - 96px)!important;
     padding:24px 22px!important;
-    overflow-x:hidden!important;
+    overflow:auto!important;
+    min-height:100vh!important;
   }
   header{gap:14px!important}
   h1{font-size:28px!important}
@@ -45,11 +50,12 @@
     width:100%!important;
     max-width:100%!important;
     overflow-x:auto!important;
-    overflow-y:visible!important;
+    overflow-y:auto!important;
     -webkit-overflow-scrolling:touch!important;
+    scrollbar-gutter:stable both-edges!important;
   }
   table{
-    min-width:1120px!important;
+    min-width:1260px!important;
     width:max-content!important;
   }
   th,td{padding:12px 14px!important}
@@ -70,4 +76,19 @@
     max-height:calc(100vh - 30px)!important;
     overflow:auto!important;
   }
+}
+
+@media (max-width:1180px) and (min-width:761px){
+  .panel{max-height:calc(100vh - 210px)!important}
+  table{min-width:1320px!important}
+  .toolbar{min-width:980px!important}
+  .driver-actions{min-width:380px!important}
+}
+
+@media (max-height:760px) and (min-width:761px){
+  aside{padding-bottom:28px!important}
+  .user{margin-top:12px!important}
+  .user button{min-height:36px!important}
+  main{padding-top:18px!important;padding-bottom:18px!important}
+  .panel{max-height:calc(100vh - 175px)!important}
 }
