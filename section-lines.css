@@ -60,6 +60,25 @@
   overflow-wrap:anywhere!important;
   word-break:break-word!important;
 }
+.panel td[colspan],
+.panel th[colspan]{
+  position:static!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  text-align:left!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.panel td[colspan] .settings-page,
+.panel td[colspan] .report-box{
+  width:100%!important;
+  max-width:100%!important;
+}
+.panel td[colspan] .settings-grid,
+.panel td[colspan] .schedule-driver{
+  text-align:left!important;
+}
 @media(max-width:760px){
   .panel tbody tr{
     border:1px solid #dfe4ea!important;
