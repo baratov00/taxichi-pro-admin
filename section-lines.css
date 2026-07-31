@@ -1,5 +1,19 @@
-/* Clear separators for admin sections: drivers, organizations, cars, medics, mechanics, archive. */
-.panel table{border-collapse:separate!important;border-spacing:0!important}
+/* Clear, stable frame for admin sections: drivers, organizations, cars, medics, mechanics, archive. */
+.panel{
+  border:1px solid #d9dee5!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  overflow:auto!important;
+}
+.panel .toolbar{
+  border-bottom:1px solid #e5e9ee!important;
+  background:#fff!important;
+}
+.panel table{
+  width:100%!important;
+  border-collapse:separate!important;
+  border-spacing:0!important;
+}
 .panel thead th{
   border-bottom:2px solid #dfe4ea!important;
   background:#fafbfc!important;
@@ -19,6 +33,32 @@
 }
 .panel tbody td+td{
   border-left:1px solid #f0f2f5!important;
+}
+.panel th:last-child,
+.panel td:last-child{
+  width:150px!important;
+  min-width:150px!important;
+  max-width:150px!important;
+  text-align:right!important;
+  background:#fff!important;
+}
+.panel thead th:last-child{
+  background:#fafbfc!important;
+}
+.panel td:last-child .driver-actions{
+  width:100%!important;
+  min-width:0!important;
+  justify-content:flex-end!important;
+}
+.panel td:last-child .open,
+.panel td:last-child button{
+  max-width:124px!important;
+  white-space:nowrap!important;
+}
+.panel td:nth-child(3){
+  max-width:460px!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
 }
 @media(max-width:760px){
   .panel tbody tr{

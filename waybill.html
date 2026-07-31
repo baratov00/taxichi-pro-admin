@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
   <title>Путевой лист Taxichi Pro</title>
   <link rel="icon" href="taxichi-pro-logo.png">
   <link rel="apple-touch-icon" href="taxichi-pro-logo.png">
@@ -41,7 +43,7 @@
     body.mobile-view .page{height:900px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
     body.app-view .draw{transform:translate(36px,24px) scale(1) translate(-36px,-36px)}
     .mobile-qr{display:none}
-    body.mobile-view .mobile-qr{display:block;position:absolute;left:415px;top:730px;width:76px;height:76px;z-index:5;transform-origin:center center}
+    body.mobile-view .mobile-qr{display:block;position:absolute;left:415px;top:730px;width:76px;height:76px;z-index:5;transform-origin:center center;background:#fff;image-rendering:pixelated}
     @page{size:A4;margin:0}
     @media print{body{background:#fff}.actions{display:none}.sheet{margin:0}}
   </style>
@@ -232,10 +234,10 @@
         img.onerror=()=>{img.style.display='none'};
         page.append(img);
       }
-      img.style.display='none';
+      img.style.display='block';
       const mobileSources=[
-        `https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`,
-        src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`
+        src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`,
+        `https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`
       ];
       let sourceIndex=0;
       img.onerror=()=>{sourceIndex++;if(sourceIndex<mobileSources.length){img.src=mobileSources[sourceIndex]}else{img.style.display='none'}};

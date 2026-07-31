@@ -74,8 +74,9 @@
     scrollbar-gutter:stable both-edges!important;
   }
   table{
-    min-width:1260px!important;
-    width:max-content!important;
+    min-width:1180px!important;
+    width:100%!important;
+    table-layout:fixed!important;
   }
   th,td{padding:12px 14px!important}
   th:last-child,td:last-child{
@@ -86,6 +87,11 @@
     box-shadow:-10px 0 16px #ffffffcc!important;
   }
   thead th:last-child{z-index:5!important;background:#fafbfc!important}
+  th:last-child,td:last-child{
+    width:150px!important;
+    min-width:150px!important;
+    max-width:150px!important;
+  }
   #tableHead th:nth-child(3),tbody td:nth-child(3){
     max-width:300px!important;
     overflow:hidden!important;
@@ -93,9 +99,15 @@
     word-break:break-word!important;
   }
   .driver-actions{
-    min-width:130px!important;
-    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    justify-content:flex-end!important;
     flex-wrap:nowrap!important;
+  }
+  .driver-actions .open,.driver-actions button{
+    max-width:124px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
   }
   .driver-actions button,.driver-waybill,.open{white-space:nowrap!important}
   .toolbar{min-width:860px!important}
@@ -113,9 +125,9 @@
 
 @media (max-width:1180px) and (min-width:761px){
   .panel{max-height:calc(100vh - 210px)!important}
-  table{min-width:1320px!important}
+  table{min-width:1180px!important}
   .toolbar{min-width:980px!important}
-  .driver-actions{min-width:130px!important}
+  .driver-actions{min-width:0!important}
 }
 
 @media (max-height:760px) and (min-width:761px){
