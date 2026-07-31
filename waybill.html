@@ -233,7 +233,14 @@
         page.append(img);
       }
       img.style.display='none';
-      img.src=src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${nonce}`;
+      const mobileSources=[
+        `https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`,
+        src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`
+      ];
+      let sourceIndex=0;
+      img.onerror=()=>{sourceIndex++;if(sourceIndex<mobileSources.length){img.src=mobileSources[sourceIndex]}else{img.style.display='none'}};
+      img.onload=()=>{img.style.display='block'};
+      img.src=mobileSources[sourceIndex];
       img.style.top=`${y-12}px`;
       img.style.transform=`rotate(${nonce%2?90:0}deg)`;
     }
