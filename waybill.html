@@ -230,17 +230,21 @@
         img=document.createElement('img');
         img.className='mobile-qr';
         img.alt='QR';
+        img.referrerPolicy='no-referrer';
+        img.decoding='sync';
+        img.loading='eager';
         img.onload=()=>{img.style.display='block'};
-        img.onerror=()=>{img.style.display='none'};
+        img.onerror=()=>{img.style.display='block'};
         page.append(img);
       }
       img.style.display='block';
       const mobileSources=[
+        `https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`,
         src||`https://api.qrserver.com/v1/create-qr-code/?size=208x208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`,
-        `https://api.taxichi.pro/qr?size=208&margin=0&data=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`
+        `https://quickchart.io/qr?size=208&margin=0&text=${encodeURIComponent(value)}&v=${Date.now()}-${nonce}`
       ];
       let sourceIndex=0;
-      img.onerror=()=>{sourceIndex++;if(sourceIndex<mobileSources.length){img.src=mobileSources[sourceIndex]}else{img.style.display='none'}};
+      img.onerror=()=>{sourceIndex++;if(sourceIndex<mobileSources.length){img.src=mobileSources[sourceIndex]}else{img.style.display='block'}};
       img.onload=()=>{img.style.display='block'};
       img.src=mobileSources[sourceIndex];
       img.style.top=`${y-12}px`;

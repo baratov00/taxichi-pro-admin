@@ -20,6 +20,25 @@ input,select,textarea{min-height:40px!important;padding:9px 12px!important}
 .settings-panel h2{font-size:20px!important}
 .settings-grid label,.schedule-driver label{font-size:11px!important}
 .schedule-preview b{font-size:13px!important}
+.settings-page .support-save,
+.settings-page #applyScheduleAll,
+.settings-page #saveDriverSchedules,
+.settings-page #saveSupportPhone{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:max-content!important;
+  min-height:42px!important;
+  padding:10px 16px!important;
+  border-radius:11px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  font-size:13px!important;
+  font-weight:900!important;
+}
+.settings-grid{align-items:end!important}
+.settings-grid.support-only{grid-template-columns:minmax(260px,420px) max-content!important}
 .vehicle-docs article em{font-size:10.5px!important}
 
 @media(max-width:1360px) and (min-width:761px){
