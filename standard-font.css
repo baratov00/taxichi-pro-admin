@@ -28,7 +28,7 @@ input,select,textarea{min-height:40px!important;padding:9px 12px!important}
   align-items:center!important;
   justify-content:center!important;
   width:auto!important;
-  min-width:max-content!important;
+  min-width:160px!important;
   min-height:42px!important;
   padding:10px 16px!important;
   border-radius:11px!important;
@@ -36,6 +36,14 @@ input,select,textarea{min-height:40px!important;padding:9px 12px!important}
   white-space:nowrap!important;
   font-size:13px!important;
   font-weight:900!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.settings-page #saveDriverSchedules{
+  min-width:178px!important;
+}
+.settings-page #saveSupportPhone{
+  min-width:150px!important;
 }
 .settings-grid{align-items:end!important}
 .settings-grid.support-only{grid-template-columns:minmax(260px,420px) max-content!important}

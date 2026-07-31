@@ -75,6 +75,11 @@
   width:100%!important;
   max-width:100%!important;
 }
+.panel td[colspan] button,
+.panel td[colspan] .open,
+.panel td[colspan] .support-save{
+  max-width:none!important;
+}
 .panel td[colspan] .settings-grid,
 .panel td[colspan] .schedule-driver{
   text-align:left!important;
