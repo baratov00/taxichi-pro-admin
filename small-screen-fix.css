@@ -10,14 +10,17 @@
     min-height:100%!important;
   }
   aside{
-    width:96px!important;
-    padding:16px 10px 76px!important;
+    width:132px!important;
+    height:100dvh!important;
+    padding:14px 10px 18px!important;
+    display:flex!important;
+    flex-direction:column!important;
     overflow-y:auto!important;
-    overflow-x:auto!important;
+    overflow-x:hidden!important;
   }
   .brand{justify-content:center!important;margin:0 0 18px!important}
   .brand img{width:42px!important;height:42px!important}
-  .brand span,.brand-copy,.user b,.user small{display:none!important}
+  .brand-copy{display:none!important}
   nav{gap:8px!important}
   nav button,.report-link{
     justify-content:center!important;
@@ -32,14 +35,30 @@
   }
   .user{
     display:grid!important;
-    margin-top:18px!important;
-    padding:14px 0 0!important;
+    margin-top:auto!important;
+    padding:10px 0 0!important;
+    gap:5px!important;
+    border-top:1px solid #333!important;
   }
-  .user button{font-size:11px!important;padding:8px 4px!important}
+  .user b,.user small{
+    display:block!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+  .user button{
+    width:100%!important;
+    min-height:34px!important;
+    font-size:11px!important;
+    padding:7px 4px!important;
+  }
   main{
-    margin-left:96px!important;
-    width:calc(100vw - 96px)!important;
-    max-width:calc(100vw - 96px)!important;
+    margin-left:132px!important;
+    width:calc(100vw - 132px)!important;
+    max-width:calc(100vw - 132px)!important;
     padding:24px 22px!important;
     overflow:auto!important;
     min-height:100vh!important;
@@ -59,9 +78,23 @@
     width:max-content!important;
   }
   th,td{padding:12px 14px!important}
+  th:last-child,td:last-child{
+    position:sticky!important;
+    right:0!important;
+    z-index:3!important;
+    background:#fff!important;
+    box-shadow:-10px 0 16px #ffffffcc!important;
+  }
+  thead th:last-child{z-index:5!important;background:#fafbfc!important}
+  #tableHead th:nth-child(3),tbody td:nth-child(3){
+    max-width:300px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    word-break:break-word!important;
+  }
   .driver-actions{
-    min-width:330px!important;
-    justify-content:flex-start!important;
+    min-width:130px!important;
+    justify-content:center!important;
     flex-wrap:nowrap!important;
   }
   .driver-actions button,.driver-waybill,.open{white-space:nowrap!important}
@@ -82,13 +115,17 @@
   .panel{max-height:calc(100vh - 210px)!important}
   table{min-width:1320px!important}
   .toolbar{min-width:980px!important}
-  .driver-actions{min-width:380px!important}
+  .driver-actions{min-width:130px!important}
 }
 
 @media (max-height:760px) and (min-width:761px){
-  aside{padding-bottom:28px!important}
-  .user{margin-top:12px!important}
-  .user button{min-height:36px!important}
+  aside{padding-top:10px!important;padding-bottom:12px!important}
+  .brand{margin-bottom:10px!important}
+  nav{gap:5px!important}
+  nav button,.report-link{min-height:40px!important;padding:7px 6px!important}
+  nav button .nav-icon,.report-link .nav-icon{width:22px!important;height:22px!important}
+  .user{margin-top:auto!important}
+  .user button{min-height:32px!important}
   main{padding-top:18px!important;padding-bottom:18px!important}
   .panel{max-height:calc(100vh - 175px)!important}
 }
