@@ -3,6 +3,18 @@
   const error=document.getElementById('loginError');
   if(!form||form.dataset.cloudLoginFix==='1')return;
   form.dataset.cloudLoginFix='1';
+  form.setAttribute('autocomplete','off');
+  const loginInput=form.elements.login;
+  const passwordInput=form.elements.password;
+  [loginInput,passwordInput].forEach(input=>{
+    if(!input)return;
+    input.setAttribute('autocomplete','new-password');
+    input.setAttribute('autocorrect','off');
+    input.setAttribute('autocapitalize','none');
+    input.setAttribute('spellcheck','false');
+    input.setAttribute('data-lpignore','true');
+    input.setAttribute('data-1p-ignore','true');
+  });
 
   const SUPABASE_URL='https://qquvbedufztponyxneqa.supabase.co';
   const SUPABASE_KEY='sb_publishable_8lZ9AfMvjZOx1Xz6JTlNFg_uKK0qjr8';
@@ -25,7 +37,7 @@
     const password=form.elements.password;
     if(document.activeElement===login||document.activeElement===password)return;
     const value=String(login?.value||'').trim().toLowerCase();
-    if(value==='baratov329@mail.ru'||value==='farhodzhon'||value==='admin'){
+    if(value==='baratov329@mail.ru'||value==='farhodzhon'||value==='admin'||value.includes('@mail.ru')){
       login.value='';
       if(password)password.value='';
     }

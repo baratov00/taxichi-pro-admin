@@ -4,12 +4,12 @@
   panels, so right-side buttons never disappear off screen.
 */
 @media (max-width:1360px) and (min-width:761px){
-  html,body{overflow-x:hidden!important}
+  html,body{overflow-x:auto!important}
   aside{
     width:96px!important;
     padding:16px 10px 76px!important;
     overflow-y:auto!important;
-    overflow-x:hidden!important;
+    overflow-x:auto!important;
   }
   .brand{justify-content:center!important;margin:0 0 18px!important}
   .brand img{width:42px!important;height:42px!important}
